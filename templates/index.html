@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmina-AI Enterprise - Rozwiązania dla Samorządów</title>
+    <meta name="description" content="Profesjonalne rozwiązania AI dla urzędów gmin. Automatyzacja obsługi mieszkańców z wykorzystaniem sztucznej inteligencji.">
+    <meta name="keywords" content="gmina, AI, sztuczna inteligencja, urząd, samorząd, automatyzacja, chatbot">
+    <meta name="author" content="Adept AI">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gmina-ai.pl/">
+    <meta property="og:title" content="Gmina-AI Enterprise - Rozwiązania dla Samorządów">
+    <meta property="og:description" content="Profesjonalne rozwiązania AI dla urzędów gmin">
+    <meta property="og:image" content="https://gmina-ai.pl/assets/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://gmina-ai.pl/">
+    <meta property="twitter:title" content="Gmina-AI Enterprise">
+    <meta property="twitter:description" content="Profesjonalne rozwiązania AI dla urzędów gmin">
+    <meta property="twitter:image" content="https://gmina-ai.pl/assets/twitter-image.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Gmina-AI Enterprise",
+        "description": "Profesjonalne rozwiązania AI dla urzędów gmin",
+        "url": "https://gmina-ai.pl",
+        "applicationCategory": "GovernmentApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "category": "Enterprise Software"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "Adept AI",
+            "url": "https://adept-ai.pl"
+        }
+    }
+    </script>
+</head>
+<body>
+<div class="app-container">
+    <!-- Government Header -->
+    <header class="app-header" role="banner">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon" aria-hidden="true">🏛️</div>
+                <div class="logo-text">
+                    <h1>Gmina-AI Enterprise</h1>
+                    <span>Rozwiązania dla Samorządów</span>
+                </div>
+            </div>
+            <div class="header-badge">
+                <div class="gov-badge">
+                    <span aria-hidden="true">🏛️</span>
+                    Rozwiązanie Rządowe
+                </div>
+                <div class="security-indicator">
+                    <span aria-hidden="true">🔒</span>
+                    Bezpieczne
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" role="main">
+        <!-- Initialization Panel -->
+        <div id="init-panel" class="init-panel">
+            <div class="init-content">
+                <div class="init-icon" aria-hidden="true">🤖</div>
+                <h2>System Gmina-AI Enterprise</h2>
+                <p>Witamy w profesjonalnym systemie obsługi mieszkańców. Adept to zaawansowany asystent AI, zaprojektowany specjalnie dla potrzeb polskich samorządów.</p>
+
+                <div class="gmina-selector">
+                    <label for="gmina-input">Zobacz demo dla Twojej gminy:</label>
+                    <input
+                        type="text"
+                        id="gmina-input"
+                        placeholder="Wpisz nazwę swojej gminy (np. Gorzów Wielkopolski)"
+                        autocomplete="off"
+                        aria-describedby="gmina-hint"
+                        required
+                    >
+                    <div id="gmina-hint" class="sr-only">Wpisz nazwę gminy, aby zobaczyć demo systemu</div>
+                    <button id="start-bot-btn" class="start-btn" type="button">
+                        <span>Zobacz Demo</span>
+                        <span class="btn-icon" aria-hidden="true">→</span>
+                    </button>
+                </div>
+
+                <div class="quick-select">
+                    <p>Lub wybierz z dostępnych środowisk demonstracyjnych:</p>
+                    <div class="gmina-buttons">
+                        <button class="gmina-btn" data-gmina="Przykładowa Gmina" type="button">
+                            <span aria-hidden="true">🏢</span>
+                            Przykładowa Gmina
+                        </button>
+                        <button class="gmina-btn" data-gmina="Demo Gmina" type="button">
+                            <span aria-hidden="true">🧪</span>
+                            Demo Gmina
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trust Indicators -->
+                <div class="trust-indicators">
+                    <div class="trust-item">
+                        <span class="trust-icon" aria-hidden="true">🔐</span>
+                        <span>Zaprojektowano z myślą o RODO</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chat-interface" class="chat-interface" style="display: none;" role="application" aria-label="Interfejs czatu z asystentem AI">
+            <div class="chat-header">
+                <div class="chat-status">
+                    <div class="status-indicator" aria-hidden="true"></div>
+                    <span id="current-gmina">Połączony z: <strong>Ładowanie...</strong></span>
+                </div>
+                <div class="header-controls">
+                    <div class="session-info">
+                        <span class="session-id" id="session-id">Sesja: #AI-2024</span>
+                    </div>
+                    <button id="reset-btn" class="reset-btn" title="Rozpocznij nową sesję" type="button">
+                        <span aria-hidden="true">🔄</span>
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div id="messages-container" class="messages-container" role="log" aria-live="polite" aria-label="Historia rozmowy">
+                <!-- Wiadomości będą dodawane dynamicznie przez JavaScript -->
+            </div>
+
+            <div class="input-section">
+                <div id="button-container" class="button-container" role="group" aria-label="Dostępne opcje">
+                    <!-- Przyciski będą dodawane dynamicznie -->
+                </div>
+
+                <div id="text-input-container" class="text-input-container" style="display: none;">
+                    <form class="input-group" id="message-form">
+                        <label for="user-input" class="sr-only">Wpisz swoją wiadomość</label>
+                        <input
+                            type="text"
+                            id="user-input"
+                            placeholder="Wpisz swoją wiadomość..."
+                            autocomplete="off"
+                            aria-describedby="input-hint"
+                            maxlength="500"
+                        >
+                        <button id="send-btn" class="send-btn" type="submit">
+                            <span>Wyślij</span>
+                            <span class="btn-icon" aria-hidden="true">📤</span>
+                        </button>
+                    </form>
+                    <div class="input-hint" id="input-hint">
+                        <small>💡 Wskazówka: Użyj Enter aby wysłać wiadomość. Maksymalnie 500 znaków.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Government Footer -->
+    <footer class="app-footer" role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="company">Gmina-AI Enterprise</div>
+                <div class="version">Wersja 3.0 Government Edition</div>
+                <div class="copyright">© 2024 Adept AI. Wszelkie prawa zastrzeżone.</div>
+            </div>
+            <div class="footer-center">
+                <div class="compliance-badges">
+                    <div class="gdpr-badge" title="Zaprojektowano z myślą o Rozporządzeniu o Ochronie Danych Osobowych">
+                        <span aria-hidden="true">🔐</span>
+                        Zgodność z RODO
+                    </div>
+                </div>
+            </div>
+            <div class="footer-right">
+                <div class="tech-stack">Powered by Adept Engine</div>
+                <div class="powered-by">
+                    <a href="https://adept-ai.pl" target="_blank" rel="noopener noreferrer" class="company-link">
+                        Adept AI
+                    </a>
+                </div>
+                <div class="support-info">
+                    <a href="mailto:support@gmina-ai.pl" class="support-link">
+                        📧 Wsparcie techniczne
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="loading-title">
+        <div class="loading-spinner">
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="loading-title">Adept analizuje dane...</p>
+            <div class="loading-details">
+                <small>Nawiązywanie bezpiecznego połączenia z systemem gminy</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="error-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="error-title">
+                    <span aria-hidden="true">⚠️</span>
+                    Błąd systemu
+                </h3>
+                <button class="modal-close" aria-label="Zamknij okno błędu" type="button">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">Wystąpił nieoczekiwany błąd podczas komunikacji z systemem.</p>
+                <div class="error-details">
+                    <details>
+                        <summary>Szczegóły techniczne</summary>
+                        <div id="error-technical" class="technical-info">
+                            Brak dodatkowych informacji
+                        </div>
+                    </details>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="error-retry-btn" class="btn-primary" type="button">
+                    <span aria-hidden="true">🔄</span>
+                    Spróbuj ponownie
+                </button>
+                <button class="modal-close btn-secondary" type="button">Zamknij</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="success-title">
+                    <span aria-hidden="true">✅</span>
+                    Operacja zakończona pomyślnie
+                </h3>
+                <button class="modal-close" aria-label="Zamknij okno potwierdzenia" type="button">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Operacja została wykonana pomyślnie.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-close btn-primary" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessibility Skip Links -->
+    <div class="skip-links">
+        <a href="#main-content" class="skip-link">Przejdź do głównej treści</a>
+        <a href="#chat-interface" class="skip-link">Przejdź do interfejsu czatu</a>
+    </div>
+
+    <!-- Screen Reader Only Content -->
+    <div class="sr-only">
+        <h2>Informacje dla technologii wspomagających</h2>
+        <p>Ta aplikacja wykorzystuje sztuczną inteligencję do obsługi zapytań mieszkańców. Wszystkie funkcje są dostępne za pomocą klawiatury i czytników ekranu.</p>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+
+<!-- Service Worker Registration (opcjonalnie) -->
+<script>
+    // Rejestracja Service Worker dla funkcji offline
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        });
+    }
+</script>
+
+<!-- Performance Monitoring -->
+<script>
+    // Monitoring wydajności aplikacji
+    window.addEventListener('load', function() {
+        if ('performance' in window) {
+            const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+            console.log('Page load time:', loadTime + 'ms');
+        }
+    });
+</script>
+
+</body>
+</html>
