@@ -1274,3 +1274,218 @@ textarea:focus {
 .reset-btn {
     margin-top: 0.25rem !important;
 }
+
+
+/* Logo Styles */
+.company-logo {
+    margin-right: 1rem;
+}
+
+.logo-image {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+.init-logo {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.init-logo-image {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.powered-by-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.powered-text {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.powered-logo {
+    height: 20px;
+    width: auto;
+    object-fit: contain;
+}
+
+.footer-logo {
+    height: 24px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Responsive Logo */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 32px;
+    }
+
+    .init-logo-image {
+        height: 48px;
+    }
+
+    .powered-logo {
+        height: 16px;
+    }
+
+    .footer-logo {
+        height: 20px;
+    }
+}
+
+
+/* Logo Styles - WIĘKSZE ROZMIARY */
+.company-logo {
+    margin-right: 1.5rem;
+}
+
+.logo-image {
+    height: 60px; /* ZWIĘKSZONO z 40px */
+    width: auto;
+    object-fit: contain;
+}
+
+.init-logo {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.init-logo-image {
+    height: 200px; /* ZWIĘKSZONO z 60px */
+    width: auto;
+    object-fit: contain;
+    max-width: 200px;
+}
+
+.powered-by-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.powered-text {
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.powered-logo {
+    height: 46px; /* ZWIĘKSZONO z 20px */
+    width: auto;
+    object-fit: contain;
+}
+
+.footer-logo {
+    height: 36px; /* ZWIĘKSZONO z 24px */
+    width: auto;
+    object-fit: contain;
+}
+
+/* Responsive Logo */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 48px;
+    }
+
+    .init-logo-image {
+        height: 80px;
+    }
+
+    .powered-logo {
+        height: 24px;
+    }
+
+    .footer-logo {
+        height: 28px;
+    }
+}
+
+
+
+/* Logo Styles - MAKSYMALNE ROZMIARY */
+.company-logo {
+    margin-right: 1.5rem;
+}
+
+.logo-image {
+    height: 80px; /* ZWIĘKSZONO z 60px */
+    width: auto;
+    object-fit: contain;
+}
+
+.init-logo {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.init-logo-image {
+    height: 240px; /* ZWIĘKSZONO z 120px */
+    width: auto;
+    object-fit: contain;
+    max-width: 300px;
+}
+
+.powered-by-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.powered-text {
+    font-size: 1rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.powered-logo {
+    height: 69px; /* ZWIĘKSZONO z 32px */
+    width: auto;
+    object-fit: contain;
+}
+
+.footer-logo {
+    height: 50px; /* ZWIĘKSZONO z 36px */
+    width: auto;
+    object-fit: contain;
+}
+
+/* Responsive Logo */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 60px;
+    }
+
+    .init-logo-image {
+        height: 120px;
+    }
+
+    .powered-logo {
+        height: 32px;
+    }
+
+    .footer-logo {
+        height: 32px;
+    }
+}
+
+
+

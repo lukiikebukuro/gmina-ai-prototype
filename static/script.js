@@ -1,13 +1,10 @@
-// script.js - Frontend logic dla Gmina-AI
-// Adaptacja z aquabot.js na potrzeby systemu Adept
-
+// script.js - Naprawiono problem z powrotem do menu
 class GminaBotUI {
     constructor() {
         this.currentGmina = null;
         this.isWaitingForInput = false;
         this.inputContext = null;
-        
-        // Referencje do elementów DOM
+
         this.initPanel = document.getElementById('init-panel');
         this.chatInterface = document.getElementById('chat-interface');
         this.messagesContainer = document.getElementById('messages-container');
@@ -17,15 +14,14 @@ class GminaBotUI {
         this.sendBtn = document.getElementById('send-btn');
         this.loadingOverlay = document.getElementById('loading-overlay');
         this.errorModal = document.getElementById('error-modal');
-        
+
         this.initializeEventListeners();
     }
 
     initializeEventListeners() {
-        // Przycisk start
         const startBtn = document.getElementById('start-bot-btn');
         const gminaInput = document.getElementById('gmina-input');
-        
+
         startBtn.addEventListener('click', () => {
             const gminaName = gminaInput.value.trim();
             if (gminaName) {
@@ -35,14 +31,12 @@ class GminaBotUI {
             }
         });
 
-        // Enter w polu gminy
         gminaInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 startBtn.click();
             }
         });
 
-        // Przyciski wyboru gminy
         const gminaButtons = document.querySelectorAll('.gmina-btn');
         gminaButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -51,13 +45,11 @@ class GminaBotUI {
             });
         });
 
-        // Przycisk reset
         const resetBtn = document.getElementById('reset-btn');
         resetBtn.addEventListener('click', () => {
             this.resetSession();
         });
 
-        // Wysyłanie wiadomości tekstowych
         this.sendBtn.addEventListener('click', () => {
             this.sendTextMessage();
         });
@@ -69,14 +61,12 @@ class GminaBotUI {
             }
         });
 
-        // Zamykanie modali
         document.querySelectorAll('.modal-close').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.target.closest('.modal').style.display = 'none';
             });
         });
 
-        // Retry button w error modal
         document.getElementById('error-retry-btn').addEventListener('click', () => {
             this.errorModal.style.display = 'none';
             if (this.currentGmina) {
@@ -86,15 +76,26 @@ class GminaBotUI {
     }
 
     async startBotSession(gminaName) {
+        console.log(`[DEBUG] Rozpoczynanie sesji dla gminy: ${gminaName}`);
         this.showLoading(true);
-        
+
         try {
+            if (!gminaName || gminaName.trim() === '') {
+                throw new Error('Nazwa gminy nie może być pusta');
+            }
+
+            const requestData = { gmina: gminaName.trim() };
+            console.log(`[DEBUG] Wysyłanie danych:`, requestData);
+
             const response = await fetch('/gmina-bot/start', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ gmina: gminaName })
+                credentials: 'same-origin',
+                body: JSON.stringify(requestData)
             });
 
             if (!response.ok) {
@@ -102,15 +103,22 @@ class GminaBotUI {
             }
 
             const data = await response.json();
-            
-            // Przełączenie na interfejs chatu
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            if (!data.reply) {
+                throw new Error('Brak odpowiedzi od serwera');
+            }
+
             this.currentGmina = gminaName;
             this.switchToChatInterface(gminaName);
             this.displayBotMessage(data.reply);
-            
+
         } catch (error) {
-            console.error('Błąd podczas inicjalizacji sesji:', error);
-            this.showError('Nie udało się nawiązać połączenia z systemem. Sprawdź połączenie internetowe i spróbuj ponownie.');
+            console.error('[ERROR] Błąd podczas inicjalizacji sesji:', error);
+            this.showError(`Nie udało się nawiązać połączenia: ${error.message}`);
         } finally {
             this.showLoading(false);
         }
@@ -119,11 +127,7 @@ class GminaBotUI {
     switchToChatInterface(gminaName) {
         this.initPanel.style.display = 'none';
         this.chatInterface.style.display = 'flex';
-        
-        // Aktualizacja nagłówka
         document.getElementById('current-gmina').innerHTML = `Połączony z: <strong>${gminaName}</strong>`;
-        
-        // Wyczyść poprzednie wiadomości
         this.messagesContainer.innerHTML = '';
         this.buttonContainer.innerHTML = '';
     }
@@ -131,7 +135,6 @@ class GminaBotUI {
     displayBotMessage(reply) {
         if (!reply) return;
 
-        // Usuń wskaźnik pisania, jeśli istnieje
         this.removeTypingIndicator();
 
         const messageElement = document.createElement('div');
@@ -142,12 +145,10 @@ class GminaBotUI {
             <div class="message-content">
         `;
 
-        // Główny tekst wiadomości
         if (reply.text_message) {
             messageContent += `<div class="message-text">${reply.text_message.replace(/\n/g, '<br>')}</div>`;
         }
 
-        // Wskaźniki statusu (adaptacja z parametrów AquaBot)
         if (reply.status_indicators && reply.status_indicators.length > 0) {
             messageContent += '<div class="status-indicators"><ul>';
             reply.status_indicators.forEach(indicator => {
@@ -158,16 +159,13 @@ class GminaBotUI {
 
         messageContent += '</div>';
         messageElement.innerHTML = messageContent;
-        
         this.messagesContainer.appendChild(messageElement);
 
-        // Wyświetl przyciski, jeśli są dostępne
         if (reply.buttons && reply.buttons.length > 0) {
             this.displayButtons(reply.buttons);
             this.textInputContainer.style.display = 'none';
         }
 
-        // Sprawdź czy oczekuje na input tekstowy
         if (reply.input_expected) {
             this.isWaitingForInput = true;
             this.inputContext = reply.input_context;
@@ -181,16 +179,16 @@ class GminaBotUI {
 
     displayButtons(buttons) {
         this.buttonContainer.innerHTML = '';
-        
+
         buttons.forEach(button => {
             const buttonElement = document.createElement('button');
             buttonElement.className = 'action-btn';
             buttonElement.textContent = button.text;
-            
+
             buttonElement.addEventListener('click', () => {
                 this.handleButtonClick(button.action, button.text);
             });
-            
+
             this.buttonContainer.appendChild(buttonElement);
         });
     }
@@ -216,23 +214,25 @@ class GminaBotUI {
     }
 
     async handleButtonClick(action, buttonText) {
-        // Pokaż wiadomość użytkownika (kliknięty przycisk)
+        if (action === 'restart' || action === 'reload') {
+            this.resetSession();
+            return;
+        }
+
         this.displayUserMessage(`📌 ${buttonText}`);
-        
-        // Wyczyść przyciski
         this.buttonContainer.innerHTML = '';
-        
-        // Pokaż wskaźnik pisania
         this.displayTypingIndicator();
-        
         this.showLoading(true);
-        
+
         try {
             const response = await fetch('/gmina-bot/send', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ button_action: action })
             });
 
@@ -241,8 +241,17 @@ class GminaBotUI {
             }
 
             const data = await response.json();
+
+            if (data.reply && data.reply.text_message && data.reply.text_message.includes('Sesja wygasła')) {
+                this.showError('Sesja wygasła. Zostaniesz przekierowany do wyboru gminy.');
+                setTimeout(() => {
+                    this.resetSession();
+                }, 2000);
+                return;
+            }
+
             this.displayBotMessage(data.reply);
-            
+
         } catch (error) {
             console.error('Błąd podczas obsługi przycisku:', error);
             this.showError('Nie udało się przetworzyć żądania. Spróbuj ponownie.');
@@ -255,28 +264,27 @@ class GminaBotUI {
         const message = this.userInput.value.trim();
         if (!message) return;
 
-        // Pokaż wiadomość użytkownika
         this.displayUserMessage(message);
         this.userInput.value = '';
-        
-        // Ukryj input jeśli nie jest już potrzebny
+
         if (this.isWaitingForInput) {
             this.textInputContainer.style.display = 'none';
             this.isWaitingForInput = false;
             this.inputContext = null;
         }
 
-        // Pokaż wskaźnik pisania
         this.displayTypingIndicator();
-
         this.showLoading(true);
 
         try {
             const response = await fetch('/gmina-bot/send', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ message: message })
             });
 
@@ -298,32 +306,28 @@ class GminaBotUI {
     displayUserMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.className = 'message user-message';
-        
+
         messageElement.innerHTML = `
             <div class="message-content">
                 <div class="message-text">${message}</div>
             </div>
             <div class="message-avatar">👤</div>
         `;
-        
+
         this.messagesContainer.appendChild(messageElement);
         this.scrollToBottom();
     }
 
     resetSession() {
-        // Powrót do ekranu inicjalizacji
+        console.log('[DEBUG] Resetowanie sesji');
         this.chatInterface.style.display = 'none';
         this.initPanel.style.display = 'flex';
-        
-        // Wyczyść stan
         this.currentGmina = null;
         this.isWaitingForInput = false;
         this.inputContext = null;
         this.messagesContainer.innerHTML = '';
         this.buttonContainer.innerHTML = '';
         this.textInputContainer.style.display = 'none';
-        
-        // Wyczyść pole input
         document.getElementById('gmina-input').value = '';
     }
 
@@ -343,7 +347,6 @@ class GminaBotUI {
     }
 }
 
-// Auto-complete dla nazw gmin
 class GminaAutocomplete {
     constructor() {
         this.gminaInput = document.getElementById('gmina-input');
@@ -351,13 +354,14 @@ class GminaAutocomplete {
             'Przykładowa Gmina',
             'Demo Gmina',
             'Warszawa',
-            'Kraków', 
+            'Kraków',
             'Gdańsk',
             'Wrocław',
             'Poznań',
-            'Łódź'
+            'Łódź',
+            'Gorzów Wielkopolski'
         ];
-        
+
         this.initAutoComplete();
     }
 
@@ -366,8 +370,7 @@ class GminaAutocomplete {
 
         this.gminaInput.addEventListener('input', (e) => {
             const value = e.target.value.toLowerCase();
-            
-            // Usuń poprzednie sugestie
+
             if (suggestionList) {
                 suggestionList.remove();
                 suggestionList = null;
@@ -375,25 +378,25 @@ class GminaAutocomplete {
 
             if (value.length < 2) return;
 
-            const matches = this.suggestions.filter(gmina => 
+            const matches = this.suggestions.filter(gmina =>
                 gmina.toLowerCase().includes(value)
             );
 
             if (matches.length > 0) {
                 suggestionList = document.createElement('div');
                 suggestionList.className = 'autocomplete-suggestions';
-                
+
                 matches.forEach(match => {
                     const suggestion = document.createElement('div');
                     suggestion.className = 'autocomplete-item';
                     suggestion.textContent = match;
-                    
+
                     suggestion.addEventListener('click', () => {
                         this.gminaInput.value = match;
                         suggestionList.remove();
                         suggestionList = null;
                     });
-                    
+
                     suggestionList.appendChild(suggestion);
                 });
 
@@ -401,7 +404,6 @@ class GminaAutocomplete {
             }
         });
 
-        // Ukryj sugestie po kliknięciu poza pole
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.gmina-selector') && suggestionList) {
                 suggestionList.remove();
@@ -411,26 +413,19 @@ class GminaAutocomplete {
     }
 }
 
-// Inicjalizacja aplikacji po załadowaniu DOM
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🏛️ Gmina-AI Frontend initialized');
+    console.log('🏛️ Gmina-AI Frontend initialized v2.3');
     console.log('🤖 Adept Engine ready');
-    
-    // Inicjalizuj główny interfejs
+
     window.gminaBotUI = new GminaBotUI();
-    
-    // Inicjalizuj auto-complete
     window.gminaAutocomplete = new GminaAutocomplete();
-    
-    // Easter egg - konami code dla trybu deweloperskiego
-    let konamiCode = '';
-    document.addEventListener('keydown', (e) => {
-        konamiCode += e.code;
-        if (konamiCode.includes('ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRight')) {
-            console.log('🎮 Developer mode activated!');
-            console.log('🔧 Gozaru Labs Debug Console Ready');
-            konamiCode = '';
-        }
-        if (konamiCode.length > 50) konamiCode = '';
-    });
+
+    fetch('/health')
+        .then(response => response.json())
+        .then(data => {
+            console.log('[DEBUG] Status aplikacji:', data);
+        })
+        .catch(error => {
+            console.log('[DEBUG] Błąd sprawdzania statusu:', error);
+        });
 });

@@ -22,11 +22,8 @@
     <meta property="twitter:description" content="Profesjonalne rozwiązania AI dla urzędów gmin">
     <meta property="twitter:image" content="https://gmina-ai.pl/assets/twitter-image.jpg">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <!-- Favicon - PROSTY -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,12 +32,6 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com;">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -70,7 +61,10 @@
     <header class="app-header" role="banner">
         <div class="header-content">
             <div class="logo-section">
-                <div class="logo-icon" aria-hidden="true">🏛️</div>
+                <!-- NOWE LOGO ADEPT AI -->
+                <div class="company-logo">
+                    <img src="{{ url_for('static', filename='logo-adept-ai.png') }}" alt="Adept AI Logo" class="logo-image">
+                </div>
                 <div class="logo-text">
                     <h1>Gmina-AI Enterprise</h1>
                     <span>Rozwiązania dla Samorządów</span>
@@ -94,8 +88,11 @@
         <!-- Initialization Panel -->
         <div id="init-panel" class="init-panel">
             <div class="init-content">
-                <div class="init-icon" aria-hidden="true">🤖</div>
-                <h2>System Gmina-AI Enterprise</h2>
+                <!-- LOGO W PANELU GŁÓWNYM -->
+<div class="init-logo">
+    <img src="{{ url_for('static', filename='logo-adept-ai.png') }}" alt="Adept AI" class="init-logo-image">
+</div>
+<h2 class="system-title">System Gmina-AI Enterprise</h2>
                 <p>Witamy w profesjonalnym systemie obsługi mieszkańców. Adept to zaawansowany asystent AI, zaprojektowany specjalnie dla potrzeb polskich samorządów.</p>
 
                 <div class="gmina-selector">
@@ -135,6 +132,12 @@
                         <span class="trust-icon" aria-hidden="true">🔐</span>
                         <span>Zaprojektowano z myślą o RODO</span>
                     </div>
+                </div>
+
+                <!-- POWERED BY ADEPT AI -->
+                <div class="powered-by-section">
+                    <span class="powered-text">Powered by</span>
+                    <img src="{{ url_for('static', filename='logo-adept-ai.png') }}" alt="Adept AI" class="powered-logo">
                 </div>
             </div>
         </div>
@@ -210,7 +213,7 @@
                 <div class="tech-stack">Powered by Adept Engine</div>
                 <div class="powered-by">
                     <a href="https://adept-ai.pl" target="_blank" rel="noopener noreferrer" class="company-link">
-                        Adept AI
+                        <img src="{{ url_for('static', filename='logo-adept-ai.png') }}" alt="Adept AI" class="footer-logo">
                     </a>
                 </div>
                 <div class="support-info">
@@ -298,33 +301,6 @@
 
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-
-<!-- Service Worker Registration (opcjonalnie) -->
-<script>
-    // Rejestracja Service Worker dla funkcji offline
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
-                    console.log('SW registered: ', registration);
-                })
-                .catch(function(registrationError) {
-                    console.log('SW registration failed: ', registrationError);
-                });
-        });
-    }
-</script>
-
-<!-- Performance Monitoring -->
-<script>
-    // Monitoring wydajności aplikacji
-    window.addEventListener('load', function() {
-        if ('performance' in window) {
-            const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
-            console.log('Page load time:', loadTime + 'ms');
-        }
-    });
-</script>
 
 </body>
 </html>
