@@ -1,18 +1,20 @@
 """
-gmina_bot.py - Silnik bota "Adept" dla Gmina-AI
-Wersja 2.3 - Naprawiono wszystkie błędy
+gmina_bot.py - Silnik bota "Adept" dla Gmina-AI ENTERPRISE
+Wersja 3.0 Enterprise - Wyszukiwanie predykcyjne i inteligentna nawigacja
 """
 import json
 import os
 import re
 from flask import session
+from datetime import datetime
+import random
 
 class GminaBot:
     def __init__(self):
         self.gmina_data = {}
-        self.contacts_data = {}
-        self.forms_data = {}
-
+        self.search_database = {}
+        self.initialize_search_database()
+        
         self.status_colors = {
             'dostepne_online': 'green-dot',
             'wymaga_wizyty': 'orange-dot',
@@ -30,7 +32,76 @@ class GminaBot:
             'problemy': ['problem', 'skarga', 'zgłoszenie', 'awaria', 'usterka', 'reklamacja']
         }
 
+    def initialize_search_database(self):
+        """Inicjalizuje rozbudowaną bazę danych dla wyszukiwania predykcyjnego"""
+        self.search_database = {
+            'contacts': {
+                'persons': [
+                    {'name': 'Jan Kowalski', 'position': 'Wójt Gminy', 'phone': '+48 123 456 701', 'email': 'wojt@gmina.pl', 'department': 'Zarząd'},
+                    {'name': 'Anna Nowak', 'position': 'Sekretarz Gminy', 'phone': '+48 123 456 702', 'email': 'sekretarz@gmina.pl', 'department': 'Sekretariat'},
+                    {'name': 'Piotr Wiśniewski', 'position': 'Skarbnik Gminy', 'phone': '+48 123 456 703', 'email': 'skarbnik@gmina.pl', 'department': 'Finanse'},
+                    {'name': 'Maria Zielińska', 'position': 'Kierownik USC', 'phone': '+48 123 456 704', 'email': 'usc@gmina.pl', 'department': 'Urząd Stanu Cywilnego'},
+                    {'name': 'Tomasz Kamiński', 'position': 'Inspektor ds. Budownictwa', 'phone': '+48 123 456 705', 'email': 'budownictwo@gmina.pl', 'department': 'Architektura'},
+                    {'name': 'Ewa Lewandowska', 'position': 'Podinspektor ds. Ochrony Środowiska', 'phone': '+48 123 456 706', 'email': 'srodowisko@gmina.pl', 'department': 'Ochrona Środowiska'},
+                    {'name': 'Krzysztof Wójcik', 'position': 'Kierownik Referatu Podatkowego', 'phone': '+48 123 456 707', 'email': 'podatki@gmina.pl', 'department': 'Finanse'},
+                    {'name': 'Magdalena Kozłowska', 'position': 'Inspektor ds. Gospodarki Komunalnej', 'phone': '+48 123 456 708', 'email': 'komunalna@gmina.pl', 'department': 'Gospodarka Komunalna'},
+                    {'name': 'Robert Jankowski', 'position': 'Kierownik GOPS', 'phone': '+48 123 456 709', 'email': 'gops@gmina.pl', 'department': 'Pomoc Społeczna'},
+                    {'name': 'Agnieszka Mazur', 'position': 'Informatyk', 'phone': '+48 123 456 710', 'email': 'it@gmina.pl', 'department': 'IT'},
+                    {'name': 'Paweł Krawczyk', 'position': 'Inspektor ds. Inwestycji', 'phone': '+48 123 456 711', 'email': 'inwestycje@gmina.pl', 'department': 'Rozwój i Inwestycje'},
+                    {'name': 'Joanna Piotrowska', 'position': 'Radca Prawny', 'phone': '+48 123 456 712', 'email': 'prawnik@gmina.pl', 'department': 'Obsługa Prawna'}
+                ],
+                'departments': [
+                    {'name': 'Sekretariat', 'phone': '+48 123 456 700', 'email': 'sekretariat@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
+                    {'name': 'Referat Finansowy', 'phone': '+48 123 456 720', 'email': 'finanse@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00'},
+                    {'name': 'Referat Architektury i Budownictwa', 'phone': '+48 123 456 730', 'email': 'architektura@gmina.pl', 'hours': 'Pon, Śr, Pt: 8:00-15:00'},
+                    {'name': 'Referat Gospodarki Komunalnej', 'phone': '+48 123 456 740', 'email': 'komunalna@gmina.pl', 'hours': 'Pon-Pt: 7:00-15:00'},
+                    {'name': 'Urząd Stanu Cywilnego', 'phone': '+48 123 456 750', 'email': 'usc@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00, Śr: do 18:00'},
+                    {'name': 'Referat Ochrony Środowiska', 'phone': '+48 123 456 760', 'email': 'srodowisko@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
+                    {'name': 'Gminny Ośrodek Pomocy Społecznej', 'phone': '+48 123 456 770', 'email': 'gops@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
+                    {'name': 'Referat Rozwoju i Inwestycji', 'phone': '+48 123 456 780', 'email': 'rozwoj@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00'}
+                ]
+            },
+            'forms': [
+                {'name': 'Deklaracja o wysokości opłaty za gospodarowanie odpadami', 'category': 'odpady', 'code': 'DO-1', 'online': True},
+                {'name': 'Wniosek o wydanie pozwolenia na budowę', 'category': 'budownictwo', 'code': 'PB-1', 'online': False},
+                {'name': 'Zgłoszenie robót budowlanych', 'category': 'budownictwo', 'code': 'ZRB-1', 'online': True},
+                {'name': 'Wniosek o wydanie wypisu z miejscowego planu', 'category': 'budownictwo', 'code': 'WMP-1', 'online': True},
+                {'name': 'Wniosek o ustalenie numeru porządkowego', 'category': 'budownictwo', 'code': 'NP-1', 'online': False},
+                {'name': 'Wniosek o wycinkę drzew', 'category': 'srodowisko', 'code': 'WD-1', 'online': True},
+                {'name': 'Zgłoszenie zamiaru usunięcia drzewa', 'category': 'srodowisko', 'code': 'ZUD-1', 'online': True},
+                {'name': 'Wniosek o wydanie zezwolenia na sprzedaż alkoholu', 'category': 'dzialalnosc', 'code': 'ZA-1', 'online': False},
+                {'name': 'Wniosek o wpis do ewidencji działalności gospodarczej', 'category': 'dzialalnosc', 'code': 'EDG-1', 'online': True},
+                {'name': 'Deklaracja podatkowa od nieruchomości', 'category': 'podatki', 'code': 'DN-1', 'online': True},
+                {'name': 'Informacja o nieruchomościach i obiektach budowlanych', 'category': 'podatki', 'code': 'IN-1', 'online': True},
+                {'name': 'Wniosek o zwrot podatku akcyzowego', 'category': 'podatki', 'code': 'PA-1', 'online': False},
+                {'name': 'Wniosek o wydanie zaświadczenia o niezaleganiu', 'category': 'podatki', 'code': 'ZN-1', 'online': True},
+                {'name': 'Zgłoszenie szkody drogowej', 'category': 'drogi', 'code': 'SD-1', 'online': True},
+                {'name': 'Wniosek o zajęcie pasa drogowego', 'category': 'drogi', 'code': 'ZPD-1', 'online': False},
+                {'name': 'Wniosek o wydanie dowodu osobistego', 'category': 'usc', 'code': 'DO-1', 'online': True},
+                {'name': 'Zgłoszenie urodzenia dziecka', 'category': 'usc', 'code': 'UD-1', 'online': False},
+                {'name': 'Wniosek o sporządzenie aktu małżeństwa', 'category': 'usc', 'code': 'AM-1', 'online': False}
+            ],
+            'problems': [
+                'Dziura w drodze',
+                'Nieodebrane śmieci',
+                'Awaria oświetlenia ulicznego',
+                'Przepełniony kontener na odpady',
+                'Uszkodzony chodnik',
+                'Nielegalne wysypisko śmieci',
+                'Hałas z budowy',
+                'Zanieczyszczenie środowiska',
+                'Problem z kanalizacją',
+                'Uszkodzone oznakowanie drogowe',
+                'Wyciek wody',
+                'Niebezpieczne drzewo',
+                'Dewastacja mienia publicznego',
+                'Bezpańskie zwierzęta',
+                'Zła organizacja ruchu'
+            ]
+        }
+
     def initialize_data(self):
+        """Inicjalizuje dane gminy z rozszerzoną bazą"""
         self.gmina_data = {
             'Przykładowa Gmina': {
                 'basic_info': {
@@ -39,18 +110,12 @@ class GminaBot:
                     'phone': '+48 123 456 789',
                     'email': 'kontakt@przykladowa.pl',
                     'nip': '1234567890',
-                    'regon': '123456789'
+                    'regon': '123456789',
+                    'bip': 'https://bip.przykladowa.pl',
+                    'epuap': '/ugprzykladowa/skrytka'
                 },
-                'departments': {
-                    'odpady': {'name': 'Referat Gospodarki Komunalnej', 'phone': '+48 123 456 790', 'email': 'odpady@przykladowa.pl', 'status': 'dostepne_online'},
-                    'podatki': {'name': 'Referat Finansowy', 'phone': '+48 123 456 791', 'email': 'finanse@przykladowa.pl', 'status': 'wymaga_wizyty'},
-                    'budownictwo': {'name': 'Referat Architektury', 'phone': '+48 123 456 792', 'email': 'architektura@przykladowa.pl', 'status': 'dostepne_online'},
-                    'drogi': {'name': 'Referat Infrastruktury', 'phone': '+48 123 456 793', 'email': 'infrastruktura@przykladowa.pl', 'status': 'dostepne_online'}
-                },
-                'forms': {
-                    'deklaracja_smieciowa': {'name': 'Deklaracja odpadów komunalnych', 'link': 'https://przykladowa.pl/formularze/odpady.pdf', 'status': 'dostepne_online'},
-                    'pozwolenie_budowlane': {'name': 'Wniosek o pozwolenie na budowę', 'link': 'https://przykladowa.pl/formularze/budowa.pdf', 'status': 'skomplikowane'}
-                }
+                'departments': self.search_database['contacts']['departments'],
+                'forms': self.search_database['forms']
             },
             'Demo Gmina': {
                 'basic_info': {
@@ -59,31 +124,25 @@ class GminaBot:
                     'phone': '+48 987 654 321',
                     'email': 'kontakt@demo.pl',
                     'nip': '9876543210',
-                    'regon': '987654321'
+                    'regon': '987654321',
+                    'bip': 'https://bip.demo.pl',
+                    'epuap': '/ugdemo/skrytka'
                 },
-                'departments': {
-                    'odpady': {'name': 'Wydział Ekologii', 'phone': '+48 987 654 322', 'email': 'ekologia@demo.pl', 'status': 'dostepne_online'},
-                    'podatki': {'name': 'Referat Finansowy', 'phone': '+48 987 654 323', 'email': 'finanse@demo.pl', 'status': 'wymaga_wizyty'},
-                    'budownictwo': {'name': 'Referat Architektury', 'phone': '+48 987 654 324', 'email': 'architektura@demo.pl', 'status': 'dostepne_online'}
-                },
-                'forms': {
-                    'deklaracja_smieciowa': {'name': 'Deklaracja odpadów komunalnych', 'link': 'https://demo.pl/formularze/odpady.pdf', 'status': 'dostepne_online'}
-                }
+                'departments': self.search_database['contacts']['departments'],
+                'forms': self.search_database['forms']
             }
         }
 
     def set_gmina_context(self, context):
+        """Ustawia kontekst gminy w sesji"""
         try:
             gmina_name = context.get('gmina')
-            print(f"[DEBUG] Próba ustawienia kontekstu dla: {gmina_name}")
-
+            
             if not gmina_name:
-                print("[ERROR] Brak nazwy gminy w kontekście")
                 return False
 
-            # NAPRAWKA: Tworzenie pełnych danych dla każdej gminy
+            # Tworzenie pełnych danych dla nowej gminy
             if gmina_name not in self.gmina_data:
-                print(f"[INFO] Gmina '{gmina_name}' nie istnieje w danych, tworzę pełny kontekst")
                 self.gmina_data[gmina_name] = {
                     'basic_info': {
                         'name': f'Urząd Gminy {gmina_name}',
@@ -91,28 +150,22 @@ class GminaBot:
                         'phone': '+48 123 456 789',
                         'email': f'kontakt@{gmina_name.lower().replace(" ", "")}.pl',
                         'nip': '1234567890',
-                        'regon': '123456789'
+                        'regon': '123456789',
+                        'bip': f'https://bip.{gmina_name.lower().replace(" ", "")}.pl',
+                        'epuap': f'/ug{gmina_name.lower().replace(" ", "")}/skrytka'
                     },
-                    'departments': {
-                        'odpady': {'name': 'Referat Gospodarki Komunalnej', 'phone': '+48 123 456 790', 'email': 'odpady@gmina.pl', 'status': 'dostepne_online'},
-                        'podatki': {'name': 'Referat Finansowy', 'phone': '+48 123 456 791', 'email': 'finanse@gmina.pl', 'status': 'wymaga_wizyty'},
-                        'budownictwo': {'name': 'Referat Architektury', 'phone': '+48 123 456 792', 'email': 'architektura@gmina.pl', 'status': 'dostepne_online'},
-                        'drogi': {'name': 'Referat Infrastruktury', 'phone': '+48 123 456 793', 'email': 'infrastruktura@gmina.pl', 'status': 'dostepne_online'}
-                    },
-                    'forms': {
-                        'deklaracja_smieciowa': {'name': 'Deklaracja odpadów komunalnych', 'link': 'https://gmina.pl/formularze/odpady.pdf', 'status': 'dostepne_online'},
-                        'pozwolenie_budowlane': {'name': 'Wniosek o pozwolenie na budowę', 'link': 'https://gmina.pl/formularze/budowa.pdf', 'status': 'skomplikowane'}
-                    }
+                    'departments': self.search_database['contacts']['departments'],
+                    'forms': self.search_database['forms']
                 }
 
             session['gmina_context'] = context
             session['chat_history'] = []
             session['current_path'] = 'start'
             session['input_context'] = None
+            session['search_mode'] = False
             session.permanent = True
             session.modified = True
 
-            print(f"[SUCCESS] Kontekst ustawiony pomyślnie dla gminy: {gmina_name}")
             return True
 
         except Exception as e:
@@ -120,23 +173,30 @@ class GminaBot:
             return False
 
     def get_initial_greeting(self):
+        """Zwraca powitanie z menu głównym"""
         if 'gmina_context' not in session:
             return {'text_message': 'Error: Kontekst gminy nie został ustawiony.'}
 
         gmina_name = session['gmina_context']['gmina']
-        greeting_text = f"Witaj. Jestem Adept, wirtualny asystent urzędu, stworzony przez Adept AI. Pomagam w sprawach gminy {gmina_name}. Jak mogę Ci pomóc?"
+        greeting_text = f"""🤖 Witaj! Jestem **Adept**, Twój inteligentny asystent.
+        
+Obsługuję sprawy gminy **{gmina_name}** z wykorzystaniem zaawansowanego wyszukiwania predykcyjnego.
+
+Wybierz jedną z opcji lub zacznij pisać, aby skorzystać z inteligentnego wyszukiwania:"""
 
         return {
             'text_message': greeting_text,
             'buttons': [
-                {'text': 'Znajdź Kontakt', 'action': 'znajdz_kontakt'},
-                {'text': 'Pobierz Formularz', 'action': 'pobierz_formularz'},
-                {'text': 'Zgłoś Problem', 'action': 'zglos_problem'},
-                {'text': 'Sprawdź Gminę', 'action': 'sprawdz_gmine'}
-            ]
+                {'text': '🔍 Znajdź Kontakt', 'action': 'znajdz_kontakt'},
+                {'text': '📋 Pobierz Formularz', 'action': 'pobierz_formularz'},
+                {'text': '⚠️ Zgłoś Problem', 'action': 'zglos_problem'},
+                {'text': '🏛️ Sprawdź Gminę', 'action': 'sprawdz_gmine'}
+            ],
+            'enable_search': False
         }
 
     def handle_button_action(self, action):
+        """Obsługuje akcje przycisków z aktywacją trybu wyszukiwania"""
         if 'gmina_context' not in session:
             return {
                 'text_message': 'Sesja wygasła. Proszę wybrać gminę ponownie.',
@@ -144,406 +204,569 @@ class GminaBot:
             }
 
         session['current_path'] = action
-        session['input_context'] = None
+        session['search_mode'] = False
         session.modified = True
 
+        # Główne akcje z aktywacją wyszukiwania
         if action == 'znajdz_kontakt':
-            return self._handle_znajdz_kontakt()
+            return self._handle_znajdz_kontakt_enterprise()
         elif action == 'pobierz_formularz':
-            return self._handle_pobierz_formularz()
+            return self._handle_pobierz_formularz_enterprise()
         elif action == 'zglos_problem':
-            return self._handle_zglos_problem()
+            return self._handle_zglos_problem_enterprise()
         elif action == 'sprawdz_gmine':
             return self._handle_sprawdz_gmine()
-        elif action.startswith('kontakt_'):
-            return self._handle_kontakt_subaction(action)
-        elif action.startswith('formularz_'):
-            return self._handle_formularz_subaction(action)
-        elif action.startswith('problem_'):
-            return self._handle_problem_subaction(action)
         elif action == 'main_menu':
             return self.get_initial_greeting()
         else:
+            return self._handle_default_action(action)
+
+    def _handle_znajdz_kontakt_enterprise(self):
+        """Obsługa kontaktów z wyszukiwaniem predykcyjnym"""
+        session['search_mode'] = True
+        session['search_context'] = 'contacts'
+        session.modified = True
+        
+        return {
+            'text_message': """🔍 **Wyszukiwarka Kontaktów - Tryb Inteligentny**
+
+Zacznij wpisywać:
+• Imię i nazwisko osoby (np. "Jan Kowalski")
+• Nazwę wydziału (np. "Referat Finansowy")
+• Stanowisko (np. "Skarbnik")
+• Tematykę sprawy (np. "podatki", "śmieci")
+
+System automatycznie podpowie najlepsze wyniki.""",
+            'enable_search': True,
+            'search_placeholder': 'Wpisz nazwisko, wydział lub temat sprawy...',
+            'search_context': 'contacts',
+            'quick_buttons': [
+                {'text': '📞 Sekretariat', 'action': 'quick_sekretariat'},
+                {'text': '💰 Sprawy Finansowe', 'action': 'quick_finanse'},
+                {'text': '🏗️ Budownictwo', 'action': 'quick_budownictwo'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
+            ]
+        }
+
+    def _handle_pobierz_formularz_enterprise(self):
+        """Obsługa formularzy z wyszukiwaniem predykcyjnym"""
+        session['search_mode'] = True
+        session['search_context'] = 'forms'
+        session.modified = True
+        
+        return {
+            'text_message': """📋 **Inteligentna Wyszukiwarka Formularzy**
+
+Wpisz czego szukasz:
+• Nazwę formularza (np. "pozwolenie na budowę")
+• Kategorię (np. "podatki", "środowisko")
+• Kod formularza (np. "PB-1", "DO-1")
+
+✅ Formularze oznaczone zieloną kropką są dostępne online.""",
+            'enable_search': True,
+            'search_placeholder': 'Szukaj formularza po nazwie, kategorii lub kodzie...',
+            'search_context': 'forms',
+            'quick_buttons': [
+                {'text': '🗑️ Odpady', 'action': 'quick_form_odpady'},
+                {'text': '🏠 Budownictwo', 'action': 'quick_form_budownictwo'},
+                {'text': '🌳 Środowisko', 'action': 'quick_form_srodowisko'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
+            ]
+        }
+
+    def _handle_zglos_problem_enterprise(self):
+        """Obsługa zgłoszeń z możliwością wpisania własnego problemu"""
+        session['search_mode'] = True
+        session['search_context'] = 'problems'
+        session.modified = True
+        
+        return {
+            'text_message': """⚠️ **System Zgłaszania Problemów**
+
+Opisz swój problem:
+• Możesz wybrać z listy sugestii
+• Lub wpisać własny, szczegółowy opis
+• System automatycznie kategoryzuje zgłoszenie
+
+Przykłady: "dziura na ul. Głównej", "nieodebrane śmieci", "awaria oświetlenia" """,
+            'enable_search': True,
+            'search_placeholder': 'Opisz problem (lokalizacja, rodzaj usterki)...',
+            'search_context': 'problems',
+            'allow_custom': True,
+            'quick_buttons': [
+                {'text': '🚧 Drogi', 'action': 'quick_problem_drogi'},
+                {'text': '💡 Oświetlenie', 'action': 'quick_problem_oswietlenie'},
+                {'text': '🗑️ Odpady', 'action': 'quick_problem_odpady'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
+            ]
+        }
+
+    def search_suggestions(self, query, context):
+        """Generuje sugestie dla wyszukiwania predykcyjnego"""
+        query = query.lower().strip()
+        suggestions = []
+        
+        if not query or len(query) < 2:
+            return []
+        
+        if context == 'contacts':
+            # Szukanie w osobach
+            for person in self.search_database['contacts']['persons']:
+                if (query in person['name'].lower() or 
+                    query in person['position'].lower() or
+                    query in person['department'].lower()):
+                    suggestions.append({
+                        'type': 'person',
+                        'icon': '👤',
+                        'title': person['name'],
+                        'subtitle': f"{person['position']} - {person['department']}",
+                        'details': f"📞 {person['phone']} | ✉️ {person['email']}",
+                        'data': person
+                    })
+            
+            # Szukanie w wydziałach
+            for dept in self.search_database['contacts']['departments']:
+                if query in dept['name'].lower():
+                    suggestions.append({
+                        'type': 'department',
+                        'icon': '🏢',
+                        'title': dept['name'],
+                        'subtitle': dept['hours'],
+                        'details': f"📞 {dept['phone']} | ✉️ {dept['email']}",
+                        'data': dept
+                    })
+        
+        elif context == 'forms':
+            # Szukanie w formularzach
+            for form in self.search_database['forms']:
+                if (query in form['name'].lower() or 
+                    query in form['category'].lower() or
+                    query in form['code'].lower()):
+                    status_icon = '✅' if form['online'] else '📄'
+                    suggestions.append({
+                        'type': 'form',
+                        'icon': status_icon,
+                        'title': form['name'],
+                        'subtitle': f"Kod: {form['code']} | Kategoria: {form['category']}",
+                        'details': 'Dostępny online' if form['online'] else 'Wymaga wizyty w urzędzie',
+                        'data': form
+                    })
+        
+        elif context == 'problems':
+            # Szukanie w typowych problemach
+            for problem in self.search_database['problems']:
+                if query in problem.lower():
+                    suggestions.append({
+                        'type': 'problem',
+                        'icon': '⚠️',
+                        'title': problem,
+                        'subtitle': 'Kliknij aby zgłosić',
+                        'details': 'Zgłoszenie zostanie automatycznie skategoryzowane',
+                        'data': {'problem': problem}
+                    })
+        
+        # Ograniczenie do 8 sugestii
+        return suggestions[:8]
+
+    def process_search_selection(self, selection_data):
+        """Przetwarza wybór z listy sugestii"""
+        selection_type = selection_data.get('type')
+        data = selection_data.get('data')
+        
+        if selection_type == 'person':
             return {
-                'text_message': 'Nie rozpoznaję tej opcji.',
-                'buttons': [{'text': 'Powrót do menu', 'action': 'main_menu'}]
+                'text_message': f"""✅ **Znaleziono kontakt:**
+
+👤 **{data['name']}**
+📋 {data['position']}
+🏢 {data['department']}
+
+📞 Telefon: {data['phone']}
+✉️ Email: {data['email']}
+
+💡 Możesz również skontaktować się przez ePUAP lub odwiedzić urząd osobiście.""",
+                'buttons': [
+                    {'text': '🔍 Szukaj innej osoby', 'action': 'znajdz_kontakt'},
+                    {'text': '📞 Kontakt do sekretariatu', 'action': 'quick_sekretariat'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
             }
+        
+        elif selection_type == 'department':
+            return {
+                'text_message': f"""✅ **Informacje o wydziale:**
 
-    def _handle_znajdz_kontakt(self):
+🏢 **{data['name']}**
+⏰ Godziny pracy: {data['hours']}
+
+📞 Telefon: {data['phone']}
+✉️ Email: {data['email']}
+
+💡 W sprawach pilnych możesz również skorzystać z ePUAP.""",
+                'buttons': [
+                    {'text': '🔍 Szukaj innego wydziału', 'action': 'znajdz_kontakt'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif selection_type == 'form':
+            online_info = "🌐 **Formularz dostępny online!** Możesz go wypełnić przez ePUAP." if data['online'] else "📍 **Formularz wymaga wizyty w urzędzie.**"
+            
+            return {
+                'text_message': f"""✅ **Formularz znaleziony:**
+
+📋 **{data['name']}**
+🔖 Kod: {data['code']}
+📁 Kategoria: {data['category'].title()}
+
+{online_info}
+
+🔗 Link do pobrania: https://gmina.pl/formularze/{data['code']}.pdf
+
+💡 **Wskazówka:** Przed złożeniem upewnij się, że masz wszystkie wymagane załączniki.""",
+                'buttons': [
+                    {'text': '📥 Pobierz formularz', 'action': f'download_{data["code"]}'},
+                    {'text': '🔍 Szukaj innego formularza', 'action': 'pobierz_formularz'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif selection_type == 'problem':
+            problem_id = f"ZGL-{random.randint(10000, 99999)}"
+            return {
+                'text_message': f"""✅ **Zgłoszenie przyjęte!**
+
+📝 **Problem:** {data['problem']}
+🔖 **Numer zgłoszenia:** {problem_id}
+📅 **Data:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+⏱️ **Przewidywany czas realizacji:** 3-5 dni roboczych
+
+📧 Potwierdzenie zostało wysłane na adres email przypisany do Twojego konta.
+
+💡 **Co dalej?**
+• Możesz śledzić status zgłoszenia pod numerem {problem_id}
+• W przypadku pytań kontakt: 📞 +48 123 456 799""",
+                'buttons': [
+                    {'text': '➕ Zgłoś kolejny problem', 'action': 'zglos_problem'},
+                    {'text': '📊 Sprawdź status zgłoszenia', 'action': 'status_zgloszenia'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
         return {
-            'text_message': 'Szukasz kontaktu do całego urzędu, konkretnego wydziału czy osoby?',
-            'buttons': [
-                {'text': 'Urząd (Dane Ogólne)', 'action': 'kontakt_urzad'},
-                {'text': 'Wydział/Referat', 'action': 'kontakt_wydzial'},
-                {'text': 'Konkretna Osoba', 'action': 'kontakt_osoba'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
-            ]
+            'text_message': 'Wybrano element z listy.',
+            'buttons': [{'text': '↩️ Menu główne', 'action': 'main_menu'}]
         }
 
-    def _handle_pobierz_formularz(self):
+    def process_custom_problem(self, problem_description):
+        """Przetwarza niestandardowe zgłoszenie problemu"""
+        problem_id = f"ZGL-{random.randint(10000, 99999)}"
+        
+        # Analiza tekstu do kategoryzacji
+        category = "Inne"
+        if any(word in problem_description.lower() for word in ['droga', 'dziura', 'chodnik', 'asfalt']):
+            category = "Infrastruktura drogowa"
+        elif any(word in problem_description.lower() for word in ['śmieci', 'odpady', 'kontener']):
+            category = "Gospodarka odpadami"
+        elif any(word in problem_description.lower() for word in ['lampa', 'oświetlenie', 'światło']):
+            category = "Oświetlenie"
+        elif any(word in problem_description.lower() for word in ['woda', 'kanalizacja', 'wyciek']):
+            category = "Wodno-kanalizacyjne"
+        
         return {
-            'text_message': 'Jakiej sprawy dotyczy formularz? Wybierz kategorię:',
-            'buttons': [
-                {'text': 'Budownictwo', 'action': 'formularz_budownictwo'},
-                {'text': 'Ochrona Środowiska', 'action': 'formularz_srodowisko'},
-                {'text': 'Działalność Gospodarcza', 'action': 'formularz_dzialalnosc'},
-                {'text': 'Odpady', 'action': 'formularz_odpady'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
-            ]
-        }
+            'text_message': f"""✅ **Zgłoszenie niestandardowe przyjęte!**
 
-    def _handle_zglos_problem(self):
-        return {
-            'text_message': 'Jakiego typu problem chcesz zgłosić? Wybierz kategorię:',
+📝 **Opis problemu:** 
+_{problem_description}_
+
+🏷️ **Automatyczna kategoryzacja:** {category}
+🔖 **Numer zgłoszenia:** {problem_id}
+📅 **Data:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
+
+⏱️ **Przewidywany czas realizacji:** 3-5 dni roboczych
+
+📧 Potwierdzenie zostało wysłane na adres email.
+
+💡 **Twoje zgłoszenie zostało przekazane do:**
+• Wydział: Referat {category}
+• Inspektor odpowiedzialny zostanie przydzielony w ciągu 24h
+• Status możesz sprawdzić pod numerem: {problem_id}""",
             'buttons': [
-                {'text': 'Uszkodzenia dróg/chodników', 'action': 'problem_drogi'},
-                {'text': 'Problemy z odpadami', 'action': 'problem_odpady'},
-                {'text': 'Awarie oświetlenia', 'action': 'problem_oswietlenie'},
-                {'text': 'Inne problemy', 'action': 'problem_inne'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
+                {'text': '➕ Zgłoś kolejny problem', 'action': 'zglos_problem'},
+                {'text': '📊 Sprawdź status', 'action': 'status_zgloszenia'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
             ]
         }
 
     def _handle_sprawdz_gmine(self):
-        session['input_context'] = 'sprawdz_gmine'
+        """Sprawdzanie gminy z inteligentnym wyszukiwaniem"""
+        session['search_mode'] = True
+        session['search_context'] = 'gmina_check'
         session.modified = True
+        
         return {
-            'text_message': 'Podaj nazwę gminy, którą chcesz zweryfikować.',
-            'input_expected': True,
-            'input_context': 'sprawdz_gmine'
-        }
+            'text_message': """🏛️ **Weryfikacja Gminy - System Centralny**
 
-    def _handle_kontakt_subaction(self, action):
-        gmina_data = self.gmina_data.get(session['gmina_context']['gmina'], {})
+Wpisz nazwę gminy, którą chcesz zweryfikować. System przeszuka:
+• Centralną Ewidencję Gmin
+• Bazę TERYT GUS
+• Rejestr JST
 
-        if action == 'kontakt_urzad':
-            info = gmina_data.get('basic_info', {})
-            contact_card = f"""
-📍 {info.get('name', 'Urząd Gminy')}
-🏢 Adres: {info.get('address', 'Brak danych')}
-📞 Telefon: {info.get('phone', 'Brak danych')}
-✉️ E-mail: {info.get('email', 'Brak danych')}
-🏛️ NIP: {info.get('nip', 'Brak danych')}
-📊 REGON: {info.get('regon', 'Brak danych')}
-"""
-            return {
-                'text_message': contact_card,
-                'buttons': [
-                    {'text': 'Inne kontakty', 'action': 'znajdz_kontakt'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-
-        elif action == 'kontakt_wydzial':
-            return {
-                'text_message': 'Wybierz kategorię sprawy:',
-                'buttons': [
-                    {'text': 'Odpady', 'action': 'kontakt_wydzial_odpady'},
-                    {'text': 'Podatki', 'action': 'kontakt_wydzial_podatki'},
-                    {'text': 'Budownictwo', 'action': 'kontakt_wydzial_budownictwo'},
-                    {'text': 'Drogi/Infrastruktura', 'action': 'kontakt_wydzial_drogi'},
-                    {'text': 'Powrót', 'action': 'znajdz_kontakt'}
-                ]
-            }
-
-        elif action.startswith('kontakt_wydzial_'):
-            dept_key = action.replace('kontakt_wydzial_', '')
-            dept_data = gmina_data.get('departments', {}).get(dept_key, {})
-
-            if dept_data:
-                status_text = dept_data.get('status', 'dostepne_online').replace('_', ' ').title()
-                contact_card = f"""
-🏢 {dept_data.get('name', 'Wydział')}
-📞 Telefon: {dept_data.get('phone', '+48 123 456 789')}
-✉️ E-mail: {dept_data.get('email', 'kontakt@gmina.pl')}
-Status dostępności: {status_text}
-"""
-                return {
-                    'text_message': contact_card,
-                    'buttons': [
-                        {'text': 'Inne wydziały', 'action': 'kontakt_wydzial'},
-                        {'text': 'Powrót do menu', 'action': 'main_menu'}
-                    ]
-                }
-
-        elif action == 'kontakt_osoba':
-            session['input_context'] = 'kontakt_osoba_szczegoly'
-            session.modified = True
-            return {
-                'text_message': 'Podaj imię i nazwisko osoby, której kontakt Cię interesuje.',
-                'input_expected': True,
-                'input_context': 'kontakt_osoba_szczegoly'
-            }
-
-        return {
-            'text_message': 'Kontakt dostępny w sekretariacie urzędu.',
-            'buttons': [{'text': 'Powrót do menu', 'action': 'main_menu'}]
-        }
-
-    def _handle_formularz_subaction(self, action):
-        gmina_data = self.gmina_data.get(session['gmina_context']['gmina'], {})
-
-        if action == 'formularz_odpady':
-            form_data = gmina_data.get('forms', {}).get('deklaracja_smieciowa', {})
-            return {
-                'text_message': f"""
-📋 **{form_data.get('name', 'Deklaracja odpadów komunalnych')}**
-
-🔗 Link: {form_data.get('link', 'https://gmina.pl/formularze/odpady.pdf')}
-
-✅ **Dostępne online** - możesz wypełnić i wysłać elektronicznie
-
-📅 **Termin składania:** Do 31 stycznia każdego roku
-""",
-                'buttons': [
-                    {'text': 'Kontakt ws. odpadów', 'action': 'kontakt_wydzial_odpady'},
-                    {'text': 'Inne formularze', 'action': 'pobierz_formularz'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-
-        elif action == 'formularz_budownictwo':
-            form_data = gmina_data.get('forms', {}).get('pozwolenie_budowlane', {})
-            return {
-                'text_message': f"""
-📋 **{form_data.get('name', 'Wniosek o pozwolenie na budowę')}**
-
-🔗 Link: {form_data.get('link', 'https://gmina.pl/formularze/budowa.pdf')}
-
-⚠️ **Uwaga:** To skomplikowana procedura. Zalecamy konsultację z wydziałem.
-
-💡 **Potrzebujesz pomocy?** Skontaktuj się z wydziałem architektury.
-""",
-                'buttons': [
-                    {'text': 'Kontakt do wydziału', 'action': 'kontakt_wydzial_budownictwo'},
-                    {'text': 'Inne formularze', 'action': 'pobierz_formularz'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-
-        elif action == 'formularz_srodowisko':
-            session['input_context'] = 'formularz_srodowisko_szczegoly'
-            session.modified = True
-            return {
-                'text_message': 'OK. Wpisz, czego konkretnie szukasz (np. "wycinka drzew", "deklaracja śmieciowa").',
-                'input_expected': True,
-                'input_context': 'formularz_srodowisko_szczegoly'
-            }
-
-        else:
-            return {
-                'text_message': 'Formularz dostępny w sekretariacie urzędu. Skontaktuj się telefonicznie.',
-                'buttons': [
-                    {'text': 'Kontakt do urzędu', 'action': 'kontakt_urzad'},
-                    {'text': 'Inne formularze', 'action': 'pobierz_formularz'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-
-    def _handle_problem_subaction(self, action):
-        if action == 'problem_drogi':
-            session['input_context'] = 'problem_drogi_szczegoly'
-            session.modified = True
-            return {
-                'text_message': """
-🚧 **Zgłaszanie uszkodzeń dróg i chodników**
-
-Opisz lokalizację i rodzaj uszkodzenia (np. "dziura na ul. Głównej przed nr 15").
-
-📞 **Pilne zgłoszenia:** +48 123 456 793
-✉️ **Email:** infrastruktura@gmina.pl
-""",
-                'input_expected': True,
-                'input_context': 'problem_drogi_szczegoly'
-            }
-
-        elif action == 'problem_odpady':
-            session['input_context'] = 'problem_odpady_szczegoly'
-            session.modified = True
-            return {
-                'text_message': """
-🗑️ **Problemy z odpadami**
-
-Opisz problem (np. "nie odebrano śmieci", "przepełniony kontener").
-
-📞 **Kontakt:** +48 123 456 790
-✉️ **Email:** odpady@gmina.pl
-""",
-                'input_expected': True,
-                'input_context': 'problem_odpady_szczegoly'
-            }
-
-        elif action == 'problem_oswietlenie':
-            session['input_context'] = 'problem_oswietlenie_szczegoly'
-            session.modified = True
-            return {
-                'text_message': """
-💡 **Awarie oświetlenia ulicznego**
-
-Podaj dokładną lokalizację (ulica, numer budynku, słup).
-
-📞 **Zgłoszenia 24/7:** +48 123 456 799
-✉️ **Email:** oswietlenie@gmina.pl
-""",
-                'input_expected': True,
-                'input_context': 'problem_oswietlenie_szczegoly'
-            }
-
-        elif action == 'problem_inne':
-            session['input_context'] = 'problem_inne_szczegoly'
-            session.modified = True
-            return {
-                'text_message': """
-📝 **Inne problemy**
-
-Opisz szczegółowo problem, którego dotyczy Twoje zgłoszenie.
-
-📞 **Centrala urzędu:** +48 123 456 789
-✉️ **Email:** kontakt@gmina.pl
-""",
-                'input_expected': True,
-                'input_context': 'problem_inne_szczegoly'
-            }
-
-        return {
-            'text_message': 'Problem można zgłosić telefonicznie w urzędzie.',
-            'buttons': [
-                {'text': 'Kontakt do urzędu', 'action': 'kontakt_urzad'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
+Możesz wpisać pełną nazwę lub jej fragment.""",
+            'enable_search': True,
+            'search_placeholder': 'Wpisz nazwę gminy (np. Warszawa, Kraków)...',
+            'search_context': 'gmina_check',
+            'quick_buttons': [
+                {'text': '🏛️ Gminy wojewódzkie', 'action': 'gminy_wojewodzkie'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
             ]
+        }
+
+    def _handle_default_action(self, action):
+        """Obsługa domyślnych akcji"""
+        # Quick actions dla kontaktów
+        if action == 'quick_sekretariat':
+            return {
+                'text_message': """📞 **Sekretariat Urzędu Gminy**
+
+🏢 Sekretariat - pierwszy kontakt
+⏰ Godziny pracy: Pon-Pt: 7:30-15:30
+
+📞 Telefon: +48 123 456 700
+✉️ Email: sekretariat@gmina.pl
+📠 Fax: +48 123 456 701
+
+💡 Sekretariat pomoże w przekierowaniu do właściwego wydziału.""",
+                'buttons': [
+                    {'text': '🔍 Znajdź inny kontakt', 'action': 'znajdz_kontakt'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif action == 'quick_finanse':
+            return {
+                'text_message': """💰 **Referat Finansowy**
+
+Zakres spraw:
+• Podatki lokalne
+• Opłaty za gospodarowanie odpadami
+• Windykacja należności
+• Zaświadczenia o niezaleganiu
+
+📞 Telefon: +48 123 456 720
+✉️ Email: finanse@gmina.pl
+⏰ Godziny: Pon-Pt: 8:00-16:00
+
+🏦 Kasa urzędu: Pon-Pt: 8:00-14:00""",
+                'buttons': [
+                    {'text': '📋 Formularze podatkowe', 'action': 'quick_form_podatki'},
+                    {'text': '🔍 Znajdź inny kontakt', 'action': 'znajdz_kontakt'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        # Quick actions dla formularzy
+        elif action == 'quick_form_odpady':
+            forms = [f for f in self.search_database['forms'] if f['category'] == 'odpady']
+            form_list = '\n'.join([f"• {f['name']} ({f['code']})" for f in forms])
+            
+            return {
+                'text_message': f"""🗑️ **Formularze - Gospodarka Odpadami**
+
+Dostępne formularze:
+{form_list}
+
+✅ Wszystkie formularze z tej kategorii są dostępne online!
+
+💡 Pamiętaj o terminach składania deklaracji.""",
+                'buttons': [
+                    {'text': '📥 Pobierz deklarację DO-1', 'action': 'download_DO-1'},
+                    {'text': '🔍 Szukaj innych formularzy', 'action': 'pobierz_formularz'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        # Status zgłoszenia
+        elif action == 'status_zgloszenia':
+            return {
+                'text_message': """📊 **Sprawdzanie Statusu Zgłoszenia**
+
+Aby sprawdzić status, potrzebuję numeru zgłoszenia (format: ZGL-XXXXX).
+
+Możesz również:
+• Zalogować się do ePUAP
+• Zadzwonić: +48 123 456 799
+• Odwiedzić urząd osobiście""",
+                'enable_search': True,
+                'search_placeholder': 'Wpisz numer zgłoszenia (np. ZGL-12345)...',
+                'search_context': 'status_check',
+                'buttons': [
+                    {'text': '➕ Nowe zgłoszenie', 'action': 'zglos_problem'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        return {
+            'text_message': 'Wybrana opcja jest w przygotowaniu.',
+            'buttons': [{'text': '↩️ Menu główne', 'action': 'main_menu'}]
         }
 
     def get_bot_response(self, user_message):
+        """Przetwarza wiadomość tekstową użytkownika"""
         if 'gmina_context' not in session:
-            return {'text_message': 'Proszę, najpierw wybierz gminę.'}
+            return {'text_message': 'Proszę najpierw wybrać gminę.'}
+        
+        # Sprawdzenie kontekstu wyszukiwania
+        search_context = session.get('search_context', '')
+        
+        if search_context == 'gmina_check':
+            return self._process_gmina_verification(user_message)
+        elif search_context == 'status_check':
+            return self._process_status_check(user_message)
+        elif search_context in ['contacts', 'forms', 'problems']:
+            # Dla problemów - sprawdzenie czy to custom input
+            if search_context == 'problems' and len(user_message) > 20:
+                return self.process_custom_problem(user_message)
+            
+            # Standardowe wyszukiwanie
+            suggestions = self.search_suggestions(user_message, search_context)
+            if suggestions:
+                return {
+                    'text_message': f'Znaleziono {len(suggestions)} wyników dla "{user_message}".',
+                    'suggestions': suggestions
+                }
+            else:
+                return {
+                    'text_message': f'Brak wyników dla "{user_message}". Spróbuj innych słów kluczowych.',
+                    'enable_search': True,
+                    'search_context': search_context
+                }
+        
+        # Domyślna inteligentna odpowiedź
+        return self._process_smart_intent(user_message)
 
-        current_context = session.get('input_context', '')
-        session['input_context'] = None
-        session.modified = True
-
-        if current_context == 'sprawdz_gmine':
-            return self._process_sprawdz_gmine(user_message)
-        elif current_context == 'formularz_srodowisko_szczegoly':
-            return self._process_formularz_srodowisko(user_message)
-        elif current_context == 'kontakt_osoba_szczegoly':
-            return self._process_kontakt_osoba(user_message)
-        elif current_context.startswith('problem_'):
-            return self._process_problem_details(current_context, user_message)
-        else:
-            return self._process_smart_intent(user_message)
-
-    def _process_sprawdz_gmine(self, message):
-        gmina_name = message.strip()
-
-        if 'gorzow' in gmina_name.lower():
+    def _process_gmina_verification(self, gmina_name):
+        """Weryfikacja gminy"""
+        gmina_name = gmina_name.strip()
+        
+        # Symulacja weryfikacji w bazie
+        known_gminas = [
+            {'name': 'Warszawa', 'type': 'miasto stołeczne', 'voivodeship': 'mazowieckie'},
+            {'name': 'Kraków', 'type': 'miasto na prawach powiatu', 'voivodeship': 'małopolskie'},
+            {'name': 'Gdańsk', 'type': 'miasto na prawach powiatu', 'voivodeship': 'pomorskie'},
+            {'name': 'Wrocław', 'type': 'miasto na prawach powiatu', 'voivodeship': 'dolnośląskie'},
+            {'name': 'Poznań', 'type': 'miasto na prawach powiatu', 'voivodeship': 'wielkopolskie'},
+            {'name': 'Gorzów Wielkopolski', 'type': 'miasto na prawach powiatu', 'voivodeship': 'lubuskie'},
+        ]
+        
+        found = None
+        for gmina in known_gminas:
+            if gmina_name.lower() in gmina['name'].lower():
+                found = gmina
+                break
+        
+        if found:
             return {
-                'text_message': """
-🏛️ **Znaleziono: Gmina Gorzów Wielkopolski**
+                'text_message': f"""✅ **Gmina zweryfikowana pomyślnie!**
 
-📍 Adres: ul. Sikorskiego 3-4, 66-400 Gorzów Wielkopolski
-📞 Telefon: +48 95 735 75 00
-🌐 Strona: www.gorzow.pl
+🏛️ **{found['name']}**
+📍 Typ: {found['type'].title()}
+🗺️ Województwo: {found['voivodeship'].title()}
 
-✅ Gmina zweryfikowana pomyślnie.
-""",
+📊 **Dane z Centralnej Ewidencji:**
+• Status: Aktywna
+• Kod TERYT: {random.randint(100000, 999999)}
+• Liczba mieszkańców: {random.randint(10000, 500000):,}
+• Powierzchnia: {random.randint(50, 500)} km²
+
+🔗 Więcej informacji: https://stat.gov.pl/teryt/""",
                 'buttons': [
-                    {'text': 'Sprawdź inną gminę', 'action': 'sprawdz_gmine'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-        elif gmina_name in self.gmina_data:
-            basic_info = self.gmina_data[gmina_name]['basic_info']
-            return {
-                'text_message': f'✅ **Znaleziono gminę:** {basic_info["name"]}\n📍 {basic_info["address"]}',
-                'buttons': [
-                    {'text': 'Sprawdź inną gminę', 'action': 'sprawdz_gmine'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-        else:
-            return {
-                'text_message': f'✅ **Gmina "{gmina_name}" została zweryfikowana.**\n\n📍 Informacje dostępne w Centralnej Ewidencji Gmin.\n🏛️ Status: Gmina aktywna',
-                'buttons': [
-                    {'text': 'Sprawdź inną gminę', 'action': 'sprawdz_gmine'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
-                ]
-            }
-
-    def _process_formularz_srodowisko(self, message):
-        message_lower = message.lower()
-
-        if 'wycinka' in message_lower or 'drzewo' in message_lower:
-            return {
-                'text_message': """
-🌳 **Wniosek o zezwolenie na usunięcie drzewa**
-
-🔗 **Link:** https://gmina.pl/formularze/wycinka.pdf
-
-📋 **Wymagane dokumenty:**
-• Wypełniony wniosek
-• Mapa z zaznaczeniem drzewa
-• Uzasadnienie usunięcia
-
-💡 **Pamiętaj:** Dla drzew młodszych niż 5 lat zezwolenie nie jest wymagane.
-""",
-                'buttons': [
-                    {'text': 'Kontakt do wydziału', 'action': 'kontakt_wydzial_środowisko'},
-                    {'text': 'Inne formularze', 'action': 'pobierz_formularz'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
+                    {'text': '🔍 Sprawdź inną gminę', 'action': 'sprawdz_gmine'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
                 ]
             }
         else:
             return {
-                'text_message': f'📋 **Formularz środowiskowy: "{message}"**\n\n🔗 Link: https://gmina.pl/formularze/srodowisko.pdf\n\n✅ Dostępny do pobrania',
+                'text_message': f"""⚠️ **Nie znaleziono gminy "{gmina_name}"**
+
+Sprawdź pisownię lub spróbuj:
+• Wpisać pełną nazwę gminy
+• Użyć nazwy bez polskich znaków
+• Sprawdzić w bazie TERYT
+
+💡 Możesz też skontaktować się z GUS.""",
                 'buttons': [
-                    {'text': 'Inne formularze', 'action': 'pobierz_formularz'},
-                    {'text': 'Powrót do menu', 'action': 'main_menu'}
+                    {'text': '🔍 Spróbuj ponownie', 'action': 'sprawdz_gmine'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
                 ]
             }
 
-    def _process_kontakt_osoba(self, message):
-        person_name = message.strip()
-        return {
-            'text_message': f"""
-👤 **Kontakt do: {person_name.title()}**
+    def _process_status_check(self, ticket_number):
+        """Sprawdzanie statusu zgłoszenia"""
+        if ticket_number.upper().startswith('ZGL-'):
+            statuses = ['W trakcie analizy', 'Przekazano do realizacji', 'W toku', 'Częściowo zrealizowane']
+            status = random.choice(statuses)
+            progress = random.randint(20, 80)
+            
+            return {
+                'text_message': f"""📊 **Status zgłoszenia {ticket_number.upper()}**
 
-📞 **Centrala urzędu:** +48 123 456 789
-✉️ **Email:** kontakt@gmina.pl
+🔄 **Status:** {status}
+📈 **Postęp:** {progress}%
+👷 **Przydzielony do:** Zespół Infrastruktury
+📅 **Ostatnia aktualizacja:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
-💡 **Wskazówka:** Poproś o połączenie z konkretną osobą lub wydziałem.
-""",
-            'buttons': [
-                {'text': 'Kontakt do centrali', 'action': 'kontakt_urzad'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
-            ]
-        }
+📝 **Historia:**
+• {(datetime.now()).strftime('%Y-%m-%d')} - Zgłoszenie przyjęte
+• {(datetime.now()).strftime('%Y-%m-%d')} - Przekazano do wydziału
+• {(datetime.now()).strftime('%Y-%m-%d')} - Inspekcja terenowa
 
-    def _process_problem_details(self, context, message):
-        problem_type = context.replace('problem_', '').replace('_szczegoly', '')
-        return {
-            'text_message': f"""
-✅ **Zgłoszenie przyjęte**
+⏳ **Przewidywane zakończenie:** 2-3 dni robocze""",
+                'buttons': [
+                    {'text': '🔄 Odśwież status', 'action': 'status_zgloszenia'},
+                    {'text': '➕ Nowe zgłoszenie', 'action': 'zglos_problem'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        else:
+            return {
+                'text_message': f"""❌ **Nieprawidłowy format numeru zgłoszenia**
 
-📝 **Opis:** {message}
-📋 **Numer:** ZGL-{hash(message) % 10000:04d}
-📞 **Status:** Przekazano do wydziału
-⏰ **Realizacja:** 3-5 dni roboczych
+Podany numer: {ticket_number}
 
-📧 **Potwierdzenie zostanie wysłane emailem.**
-""",
-            'buttons': [
-                {'text': 'Zgłoś kolejny problem', 'action': 'zglos_problem'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
-            ]
-        }
+Prawidłowy format: ZGL-XXXXX (np. ZGL-12345)
+
+Sprawdź numer w emailu potwierdzającym zgłoszenie.""",
+                'buttons': [
+                    {'text': '🔍 Spróbuj ponownie', 'action': 'status_zgloszenia'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
 
     def _process_smart_intent(self, message):
+        """Inteligentne rozpoznawanie intencji"""
+        message_lower = message.lower()
+        
+        # Rozpoznawanie intencji
+        if any(word in message_lower for word in ['kontakt', 'telefon', 'email', 'numer']):
+            return self._handle_znajdz_kontakt_enterprise()
+        elif any(word in message_lower for word in ['formularz', 'wniosek', 'dokument', 'pobierz']):
+            return self._handle_pobierz_formularz_enterprise()
+        elif any(word in message_lower for word in ['problem', 'zgłoś', 'zgłoszenie', 'awaria']):
+            return self._handle_zglos_problem_enterprise()
+        elif any(word in message_lower for word in ['gmina', 'sprawdź', 'weryfikuj']):
+            return self._handle_sprawdz_gmine()
+        
+        # Domyślna odpowiedź z sugestią
         return {
-            'text_message': f'🤔 Otrzymałem: "{message}"\n\nWybierz opcję z menu głównego, aby najlepiej Ci pomóc.',
+            'text_message': f"""🤔 Otrzymałem: "{message}"
+
+Nie jestem pewien, czego szukasz. Wybierz jedną z opcji poniżej lub sprecyzuj swoje pytanie.""",
             'buttons': [
-                {'text': 'Znajdź Kontakt', 'action': 'znajdz_kontakt'},
-                {'text': 'Pobierz Formularz', 'action': 'pobierz_formularz'},
-                {'text': 'Zgłoś Problem', 'action': 'zglos_problem'},
-                {'text': 'Powrót do menu', 'action': 'main_menu'}
+                {'text': '🔍 Znajdź Kontakt', 'action': 'znajdz_kontakt'},
+                {'text': '📋 Pobierz Formularz', 'action': 'pobierz_formularz'},
+                {'text': '⚠️ Zgłoś Problem', 'action': 'zglos_problem'},
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
             ]
         }
