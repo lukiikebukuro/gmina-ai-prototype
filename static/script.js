@@ -66,6 +66,13 @@ class GminaBotUI {
         });
 
         this.sendBtn.addEventListener('click', () => {
+            if (this.searchMode && this.searchContext === 'problems') {
+                const message = this.userInput.value.trim();
+                if (message.length > 20) {
+                    this.sendCustomProblem(message);
+                    return;
+                }
+            }
             this.sendTextMessage();
         });
 
@@ -112,9 +119,17 @@ class GminaBotUI {
                     } else if (this.searchContext === 'problems' && e.target.value.length > 20) {
                         this.sendCustomProblem(e.target.value);
                     }
-                } else if (e.key === 'Escape') {
-                    this.closeSuggestions();
                 }
+            } else if (this.searchMode && e.key === 'Enter') {
+                // Obsługa Enter gdy nie ma sugestii ale jesteśmy w trybie wyszukiwania
+                e.preventDefault();
+                if (this.searchContext === 'problems' && e.target.value.length > 20) {
+                    this.sendCustomProblem(e.target.value);
+                } else if (e.target.value.length > 0) {
+                    this.sendTextMessage();
+                }
+            } else if (e.key === 'Escape') {
+                this.closeSuggestions();
             }
         });
 
