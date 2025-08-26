@@ -1,13 +1,11 @@
-"""
-gmina_bot.py - Silnik bota "Adept" dla Gmina-AI ENTERPRISE
-Wersja 3.0 Enterprise - Wyszukiwanie predykcyjne i inteligentna nawigacja
-"""
+"""gmina_bot.py - Silnik bota Adept dla Gmina-AI ENTERPRISE v3.0"""
 import json
 import os
 import re
 from flask import session
 from datetime import datetime
 import random
+
 
 class GminaBot:
     def __init__(self):
@@ -48,7 +46,15 @@ class GminaBot:
                     {'name': 'Robert Jankowski', 'position': 'Kierownik GOPS', 'phone': '+48 123 456 709', 'email': 'gops@gmina.pl', 'department': 'Pomoc Społeczna'},
                     {'name': 'Agnieszka Mazur', 'position': 'Informatyk', 'phone': '+48 123 456 710', 'email': 'it@gmina.pl', 'department': 'IT'},
                     {'name': 'Paweł Krawczyk', 'position': 'Inspektor ds. Inwestycji', 'phone': '+48 123 456 711', 'email': 'inwestycje@gmina.pl', 'department': 'Rozwój i Inwestycje'},
-                    {'name': 'Joanna Piotrowska', 'position': 'Radca Prawny', 'phone': '+48 123 456 712', 'email': 'prawnik@gmina.pl', 'department': 'Obsługa Prawna'}
+                    {'name': 'Joanna Piotrowska', 'position': 'Radca Prawny', 'phone': '+48 123 456 712', 'email': 'prawnik@gmina.pl', 'department': 'Obsługa Prawna'},
+                    {'name': 'Stanisław Dąbrowski', 'position': 'Inspektor ds. Zamówień Publicznych', 'phone': '+48 123 456 713', 'email': 'zamowienia@gmina.pl', 'department': 'Zamówienia Publiczne'},
+                    {'name': 'Katarzyna Szymańska', 'position': 'Specjalista ds. Funduszy UE', 'phone': '+48 123 456 714', 'email': 'fundusze@gmina.pl', 'department': 'Rozwój i Inwestycje'},
+                    {'name': 'Marek Pawłowski', 'position': 'Kierownik Referatu Oświaty', 'phone': '+48 123 456 715', 'email': 'oswiata@gmina.pl', 'department': 'Oświata'},
+                    {'name': 'Beata Michalska', 'position': 'Inspektor ds. Ewidencji Ludności', 'phone': '+48 123 456 716', 'email': 'ewidencja@gmina.pl', 'department': 'Ewidencja Ludności'},
+                    {'name': 'Andrzej Nowakowski', 'position': 'Geodeta Gminny', 'phone': '+48 123 456 717', 'email': 'geodeta@gmina.pl', 'department': 'Geodezja'},
+                    {'name': 'Alicja Wróblewska', 'position': 'Inspektor ds. Promocji', 'phone': '+48 123 456 718', 'email': 'promocja@gmina.pl', 'department': 'Promocja i Kultura'},
+                    {'name': 'Rafał Kaczmarek', 'position': 'Komendant Straży Gminnej', 'phone': '+48 123 456 719', 'email': 'straz@gmina.pl', 'department': 'Straż Gminna'},
+                    {'name': 'Dorota Grabowska', 'position': 'Kierownik OPS', 'phone': '+48 123 456 720', 'email': 'ops@gmina.pl', 'department': 'Pomoc Społeczna'}
                 ],
                 'departments': [
                     {'name': 'Sekretariat', 'phone': '+48 123 456 700', 'email': 'sekretariat@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
@@ -58,7 +64,11 @@ class GminaBot:
                     {'name': 'Urząd Stanu Cywilnego', 'phone': '+48 123 456 750', 'email': 'usc@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00, Śr: do 18:00'},
                     {'name': 'Referat Ochrony Środowiska', 'phone': '+48 123 456 760', 'email': 'srodowisko@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
                     {'name': 'Gminny Ośrodek Pomocy Społecznej', 'phone': '+48 123 456 770', 'email': 'gops@gmina.pl', 'hours': 'Pon-Pt: 7:30-15:30'},
-                    {'name': 'Referat Rozwoju i Inwestycji', 'phone': '+48 123 456 780', 'email': 'rozwoj@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00'}
+                    {'name': 'Referat Rozwoju i Inwestycji', 'phone': '+48 123 456 780', 'email': 'rozwoj@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00'},
+                    {'name': 'Referat Oświaty', 'phone': '+48 123 456 790', 'email': 'oswiata@gmina.pl', 'hours': 'Pon-Pt: 8:00-16:00'},
+                    {'name': 'Referat Geodezji', 'phone': '+48 123 456 800', 'email': 'geodezja@gmina.pl', 'hours': 'Pon, Śr: 8:00-16:00'},
+                    {'name': 'Straż Gminna', 'phone': '+48 123 456 810', 'email': 'straz@gmina.pl', 'hours': '24/7 - dyżury'},
+                    {'name': 'Biuro Promocji i Kultury', 'phone': '+48 123 456 820', 'email': 'promocja@gmina.pl', 'hours': 'Pon-Pt: 9:00-17:00'}
                 ]
             },
             'forms': [
@@ -79,7 +89,14 @@ class GminaBot:
                 {'name': 'Wniosek o zajęcie pasa drogowego', 'category': 'drogi', 'code': 'ZPD-1', 'online': False},
                 {'name': 'Wniosek o wydanie dowodu osobistego', 'category': 'usc', 'code': 'DO-1', 'online': True},
                 {'name': 'Zgłoszenie urodzenia dziecka', 'category': 'usc', 'code': 'UD-1', 'online': False},
-                {'name': 'Wniosek o sporządzenie aktu małżeństwa', 'category': 'usc', 'code': 'AM-1', 'online': False}
+                {'name': 'Wniosek o sporządzenie aktu małżeństwa', 'category': 'usc', 'code': 'AM-1', 'online': False},
+                {'name': 'Wniosek o przyznanie dodatku mieszkaniowego', 'category': 'pomoc', 'code': 'DM-1', 'online': True},
+                {'name': 'Wniosek o przyznanie zasiłku rodzinnego', 'category': 'pomoc', 'code': 'ZR-1', 'online': True},
+                {'name': 'Wniosek o wydanie Karty Dużej Rodziny', 'category': 'pomoc', 'code': 'KDR-1', 'online': True},
+                {'name': 'Wniosek o dotację na wymianę pieca', 'category': 'srodowisko', 'code': 'WP-1', 'online': True},
+                {'name': 'Zgłoszenie imprez masowej', 'category': 'kultura', 'code': 'IM-1', 'online': False},
+                {'name': 'Wniosek o udostępnienie informacji publicznej', 'category': 'inne', 'code': 'IP-1', 'online': True},
+                {'name': 'Skarga na działalność organu gminy', 'category': 'inne', 'code': 'SK-1', 'online': True}
             ],
             'problems': [
                 'Dziura w drodze',
@@ -96,7 +113,17 @@ class GminaBot:
                 'Niebezpieczne drzewo',
                 'Dewastacja mienia publicznego',
                 'Bezpańskie zwierzęta',
-                'Zła organizacja ruchu'
+                'Zła organizacja ruchu',
+                'Brak koszy na śmieci',
+                'Uszkodzona wiata przystankowa',
+                'Zalane tereny po deszczu',
+                'Graffiti na budynkach',
+                'Niedziałający hydrant',
+                'Zarośnięte pobocze drogi',
+                'Uszkodzone barierki ochronne',
+                'Brak przejścia dla pieszych',
+                'Niebezpieczny plac zabaw',
+                'Zapchana studzienka kanalizacyjna'
             ]
         }
 
@@ -465,38 +492,48 @@ Przykłady: "dziura na ul. Głównej", "nieodebrane śmieci", "awaria oświetlen
         
         # Analiza tekstu do kategoryzacji
         category = "Inne"
-        if any(word in problem_description.lower() for word in ['droga', 'dziura', 'chodnik', 'asfalt']):
+        if any(word in problem_description.lower() for word in ['droga', 'dziura', 'chodnik', 'asfalt', 'jezdnia']):
             category = "Infrastruktura drogowa"
-        elif any(word in problem_description.lower() for word in ['śmieci', 'odpady', 'kontener']):
+        elif any(word in problem_description.lower() for word in ['śmieci', 'odpady', 'kontener', 'kosz', 'wywóz']):
             category = "Gospodarka odpadami"
-        elif any(word in problem_description.lower() for word in ['lampa', 'oświetlenie', 'światło']):
+        elif any(word in problem_description.lower() for word in ['lampa', 'oświetlenie', 'światło', 'latarnia']):
             category = "Oświetlenie"
-        elif any(word in problem_description.lower() for word in ['woda', 'kanalizacja', 'wyciek']):
+        elif any(word in problem_description.lower() for word in ['woda', 'kanalizacja', 'wyciek', 'rura', 'studzienka']):
             category = "Wodno-kanalizacyjne"
+        elif any(word in problem_description.lower() for word in ['drzewo', 'gałęzie', 'krzew', 'zieleń', 'trawnik']):
+            category = "Zieleń miejska"
         
         return {
-            'text_message': f"""✅ **Zgłoszenie niestandardowe przyjęte!**
+            'text_message': f"""✅ **Zgłoszenie przyjęte!**
 
-📝 **Opis problemu:** 
+📝 **Twój opis problemu:** 
 _{problem_description}_
 
 🏷️ **Automatyczna kategoryzacja:** {category}
 🔖 **Numer zgłoszenia:** {problem_id}
 📅 **Data:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
 
-⏱️ **Przewidywany czas realizacji:** 3-5 dni roboczych
+⏱️ **Przewidywany czas realizacji:** 
+• Problemy krytyczne: 24-48h
+• Standardowe naprawy: 3-5 dni roboczych
+• Prace planowe: 7-14 dni
 
-📧 Potwierdzenie zostało wysłane na adres email.
+📧 **Co dalej?**
+• Potwierdzenie wysłano na email
+• SMS gdy inspektor przejmie sprawę
+• Powiadomienie o zakończeniu
 
-💡 **Twoje zgłoszenie zostało przekazane do:**
-• Wydział: Referat {category}
-• Inspektor odpowiedzialny zostanie przydzielony w ciągu 24h
-• Status możesz sprawdzić pod numerem: {problem_id}""",
+💡 **Status możesz sprawdzić:**
+• Online: gmina.pl/status/{problem_id}
+• SMS: STAN {problem_id} na nr 799-123-456
+• Telefon: +48 123 456 799""",
             'buttons': [
                 {'text': '➕ Zgłoś kolejny problem', 'action': 'zglos_problem'},
                 {'text': '📊 Sprawdź status', 'action': 'status_zgloszenia'},
+                {'text': '📸 Dodaj zdjęcie', 'action': 'add_photo'},
                 {'text': '↩️ Menu główne', 'action': 'main_menu'}
-            ]
+            ],
+            'enable_search': False  # Ważne - wyłącza tryb wyszukiwania
         }
 
     def _handle_sprawdz_gmine(self):
@@ -566,6 +603,28 @@ Zakres spraw:
                 ]
             }
         
+        elif action == 'quick_budownictwo':
+            return {
+                'text_message': """🏗️ **Referat Architektury i Budownictwa**
+
+📋 **Najczęstsze sprawy:**
+• Pozwolenia na budowę
+• Zgłoszenia robót budowlanych
+• Wypisy z planu zagospodarowania
+• Warunki zabudowy
+
+📞 Telefon: +48 123 456 730
+✉️ Email: architektura@gmina.pl
+⏰ Przyjęcia: Pon, Śr, Pt: 8:00-15:00
+
+⚠️ **UWAGA:** Dokumenty składaj minimum 30 dni przed planowanym rozpoczęciem prac!""",
+                'buttons': [
+                    {'text': '📥 Pobierz wniosek PB-1', 'action': 'download_PB-1'},
+                    {'text': '📋 Wszystkie formularze', 'action': 'pobierz_formularz'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
         # Quick actions dla formularzy
         elif action == 'quick_form_odpady':
             forms = [f for f in self.search_database['forms'] if f['category'] == 'odpady']
@@ -583,6 +642,134 @@ Dostępne formularze:
                 'buttons': [
                     {'text': '📥 Pobierz deklarację DO-1', 'action': 'download_DO-1'},
                     {'text': '🔍 Szukaj innych formularzy', 'action': 'pobierz_formularz'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif action == 'quick_form_budownictwo':
+            return {
+                'text_message': """🏠 **Formularze Budowlane - TOP 3**
+
+1️⃣ **Pozwolenie na budowę (PB-1)**
+   ⚠️ Wymaga wizyty w urzędzie
+   
+2️⃣ **Zgłoszenie robót (ZRB-1)**
+   ✅ Dostępne online przez ePUAP
+   
+3️⃣ **Wypis z planu (WMP-1)**
+   ✅ Złóż online, odbierz za 14 dni
+
+📞 Konsultacje: +48 123 456 730
+💡 **PORADA:** Najpierw sprawdź plan zagospodarowania!""",
+                'buttons': [
+                    {'text': '📥 Pobierz formularze', 'action': 'pobierz_formularz'},
+                    {'text': '☎️ Kontakt do wydziału', 'action': 'quick_budownictwo'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif action == 'quick_form_srodowisko':
+            return {
+                'text_message': """🌳 **Formularze Środowiskowe**
+
+🌲 **Wycinka drzew (WD-1)**
+✅ Online | Termin: 30 dni
+
+♻️ **Dotacja na wymianę pieca (WP-1)**
+✅ Online | Dofinansowanie do 5000 zł!
+
+🍃 **Zgłoszenie zanieczyszczenia**
+✅ Formularz interwencyjny 24/7
+
+📞 Ekodoradca: +48 123 456 760
+💚 Dbamy o środowisko razem!""",
+                'buttons': [
+                    {'text': '🌲 Wniosek o wycinkę', 'action': 'download_WD-1'},
+                    {'text': '♻️ Dotacja na piec', 'action': 'download_WP-1'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        # Quick actions dla problemów
+        elif action == 'quick_problem_drogi':
+            return {
+                'text_message': """🚧 **Zgłaszanie Problemów Drogowych**
+
+📱 **SZYBKIE ZGŁOSZENIE:**
+Wyślij SMS na numer: 799-123-456
+Format: DZIURA [ulica] [nr domu]
+
+📧 **EMAIL Z FOTO:**
+drogi@gmina.pl (załącz zdjęcie!)
+
+☎️ **TELEFON 24/7:**
++48 123 456 793 (awarie pilne)
+
+⚡ **Średni czas naprawy:**
+• Dziury: 3-5 dni
+• Chodniki: 7-14 dni
+• Oznakowanie: 24-48h""",
+                'enable_search': True,
+                'search_placeholder': 'Opisz problem (np. "dziura na Głównej 15")...',
+                'search_context': 'problems',
+                'buttons': [
+                    {'text': '📸 Wyślij ze zdjęciem', 'action': 'send_with_photo'},
+                    {'text': '🗺️ Pokaż na mapie', 'action': 'show_map'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif action == 'quick_problem_oswietlenie':
+            return {
+                'text_message': """💡 **Awarie Oświetlenia - EKSPRESOWA NAPRAWA**
+
+🔴 **ZGŁOŚ AWARIĘ W 30 SEKUND:**
+
+1️⃣ Wyślij SMS: 799-456-789
+2️⃣ Wpisz: LAMPA [ulica] [nr słupa]
+3️⃣ Otrzymasz SMS z nr zgłoszenia
+
+⚡ **Czas reakcji:**
+• Pojedyncza lampa: 24h
+• Cała ulica: 2-4h
+• Skrzyżowanie: NATYCHMIAST
+
+🔧 Ekipa dyżurna 24/7/365
+📞 Dyspozytor: +48 123 456 799""",
+                'enable_search': True,
+                'search_placeholder': 'Podaj lokalizację awarii (ulica, nr słupa)...',
+                'search_context': 'problems',
+                'buttons': [
+                    {'text': '🆘 Zgłoś pilną awarię', 'action': 'urgent_lighting'},
+                    {'text': '📱 Status napraw', 'action': 'repair_status'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
+        elif action == 'quick_problem_odpady':
+            return {
+                'text_message': """🗑️ **Problemy z Odpadami - SZYBKA INTERWENCJA**
+
+📅 **Harmonogram wywozu:**
+• Zmieszane: PONIEDZIAŁKI
+• Segregowane: ŚRODY
+• BIO: PIĄTKI
+• Wielkogabaryty: 1. sobota miesiąca
+
+🚨 **ZGŁOŚ PROBLEM:**
+☎️ Infolinia: 800-123-456 (bezpłatna!)
+📱 SMS: ŚMIECI [adres] [problem]
+
+⏱️ **Czas reakcji:**
+• Nieodebrane: do 24h
+• Przepełniony kontener: do 48h
+• Dzikie wysypisko: do 72h""",
+                'enable_search': True,
+                'search_placeholder': 'Opisz problem ze śmieciami...',
+                'search_context': 'problems',
+                'buttons': [
+                    {'text': '📅 Harmonogram', 'action': 'waste_schedule'},
+                    {'text': '♻️ Punkty PSZOK', 'action': 'pszok_locations'},
                     {'text': '↩️ Menu główne', 'action': 'main_menu'}
                 ]
             }
@@ -607,8 +794,32 @@ Możesz również:
                 ]
             }
         
+        # Dodatkowe akcje dla formularzy podatkowych
+        elif action == 'quick_form_podatki':
+            return {
+                'text_message': """💰 **Formularze Podatkowe - E-DEKLARACJE**
+
+📊 **Najważniejsze terminy 2024:**
+• Do 31.01 - Deklaracja od nieruchomości
+• Do 15.02 - Podatek od środków transportu
+• Do 15.03 - Podatek rolny/leśny
+
+✅ **WSZYSTKO ONLINE przez ePUAP!**
+
+🎯 **NOWOŚĆ:** Kalkulator podatku online!
+💡 **ULGA:** 20% dla e-deklaracji!
+
+📞 Konsultant: +48 123 456 707
+💬 Czat online: pon-pt 8-16""",
+                'buttons': [
+                    {'text': '🧮 Kalkulator podatku', 'action': 'tax_calculator'},
+                    {'text': '📥 Pobierz deklarację', 'action': 'download_DN-1'},
+                    {'text': '↩️ Menu główne', 'action': 'main_menu'}
+                ]
+            }
+        
         return {
-            'text_message': 'Wybrana opcja jest w przygotowaniu.',
+            'text_message': 'Wybrana opcja jest już dostępna. Skorzystaj z wyszukiwania lub wybierz inną opcję.',
             'buttons': [{'text': '↩️ Menu główne', 'action': 'main_menu'}]
         }
 

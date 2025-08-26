@@ -347,6 +347,10 @@ class GminaBotUI {
             });
 
             const data = await response.json();
+            
+            // Wyłącz tryb wyszukiwania po wysłaniu
+            this.disableSearchMode();
+            
             this.displayBotMessage(data.reply);
 
         } catch (error) {
@@ -588,6 +592,7 @@ class GminaBotUI {
         const message = this.userInput.value.trim();
         if (!message) return;
 
+        // Jeśli w trybie wyszukiwania i jest to długi tekst dla problemów
         if (this.searchMode && this.searchContext === 'problems' && message.length > 20) {
             this.sendCustomProblem(message);
             return;
@@ -603,9 +608,8 @@ class GminaBotUI {
             this.inputContext = null;
         }
 
-        if (this.searchMode) {
-            this.disableSearchMode();
-        }
+        // NIE wyłączamy trybu wyszukiwania automatycznie
+        // Pozwalamy backendowi zdecydować co dalej
 
         this.displayTypingIndicator();
         this.showLoading(true);
@@ -627,6 +631,12 @@ class GminaBotUI {
             }
 
             const data = await response.json();
+            
+            // Sprawdź czy odpowiedź wyłącza tryb wyszukiwania
+            if (!data.reply.enable_search && this.searchMode) {
+                this.disableSearchMode();
+            }
+            
             this.displayBotMessage(data.reply);
 
         } catch (error) {
