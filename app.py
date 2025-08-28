@@ -182,6 +182,44 @@ def gmina_bot_process_custom():
             }
         }), 500
 
+@app.route('/gmina-bot/track-no-results', methods=['POST'])
+def gmina_track_no_results():
+    """
+    ENDPOINT 5: Send no results event to GA4 Measurement Protocol
+    RODO-COMPLIANT: Przetwarza tylko anonimowe frazy tekstowe
+    """
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        search_type = data.get('search_type', 'contacts')
+        
+        # Only track if query length > 2 (RODO protection)
+        if len(query.strip()) <= 2:
+            return jsonify({'status': 'skipped', 'reason': 'query too short'}), 200
+        
+        # Sprawdź czy sesja jest aktywna
+        if 'gmina_context' not in session:
+            return jsonify({'status': 'skipped', 'reason': 'no session'}), 200
+        
+        # Send to GA4 Measurement Protocol
+        ga4_success = bot.send_ga4_no_results_event(query, search_type)
+        
+        return jsonify({
+            'status': 'success' if ga4_success else 'partial_success',
+            'ga4_sent': ga4_success,
+            'query': query,
+            'search_type': search_type
+        })
+    
+    except Exception as e:
+        print(f"[ERROR] Track no results error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
 @app.route('/health')
 def health_check():
     """Endpoint sprawdzający status aplikacji"""
@@ -189,7 +227,7 @@ def health_check():
         'status': 'OK',
         'service': 'Gmina-AI Bot Enterprise',
         'version': '3.0',
-        'features': ['predictive_search', 'custom_problems', 'intelligent_routing'],
+        'features': ['predictive_search', 'custom_problems', 'intelligent_routing', 'ga4_tracking'],
         'session_active': 'gmina_context' in session
     })
 
@@ -213,6 +251,7 @@ if __name__ == '__main__':
         print("=" * 60)
         print("🏛️  GMINA-AI ENTERPRISE v3.0")
         print("🤖 Powered by Adept AI Engine")
+        print("🔍 GA4 No Results Tracking: ENABLED")
         print("=" * 60)
         print("✅ System uruchomiony pomyślnie!")
         print("📍 Dostępny pod adresem: http://localhost:5000")

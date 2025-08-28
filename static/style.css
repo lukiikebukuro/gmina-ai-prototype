@@ -66,8 +66,6 @@ body {
     display: flex;
     flex-direction: column;
     background: var(--white);
-    width: 100%;
-    overflow-x: hidden;
 }
 
 .app-header {
@@ -160,10 +158,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0.5rem, 5vw, 3rem);
+    padding: clamp(1rem, 5vw, 3rem);
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
     min-height: calc(100vh - 200px);
-    width: 100%;
 }
 
 /* Enterprise Initialization Panel */
@@ -361,7 +358,7 @@ body {
     border-radius: var(--border-radius-lg);
     max-width: 900px;
     width: 100%;
-    height: clamp(500px, 90vh, 800px);
+    height: clamp(500px, 80vh, 700px);
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-xl);
@@ -459,9 +456,8 @@ body {
 .message {
     display: flex;
     gap: clamp(0.5rem, 2vw, 1rem);
-    max-width: 85%;
+    max-width: 90%;
     animation: slideIn 0.3s ease;
-    margin-bottom: 0.5rem;
 }
 
 @keyframes slideIn {
@@ -570,13 +566,9 @@ body {
 
 /* Input Section */
 .input-section {
-    padding: clamp(0.75rem, 3vw, 2rem);
+    padding: clamp(1rem, 3vw, 2rem);
     background: var(--white);
     border-top: 1px solid var(--gray-200);
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
-    width: 100%;
 }
 
 .button-container {
@@ -640,42 +632,6 @@ body {
     outline: none;
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgb(30 58 138 / 0.1);
-}
-
-@media (max-width: 768px) {
-    .chat-interface {
-        margin: 0;
-        height: 100vh;
-        border-radius: 0;
-        border: none;
-    }
-
-    .input-group {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .input-group input,
-    .send-btn {
-        width: 100%;
-        min-height: 48px;
-    }
-
-    .button-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .action-btn {
-        width: 100%;
-        min-height: 48px;
-    }
-
-    .messages-container {
-        -webkit-overflow-scrolling: touch;
-    }
 }
 
 .send-btn {
