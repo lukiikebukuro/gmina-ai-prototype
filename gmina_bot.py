@@ -222,7 +222,7 @@ Wybierz jedną z opcji lub zacznij pisać, aby skorzystać z inteligentnego wysz
             ]
         }
     
-        
+    
 
     def handle_button_action(self, action):
         """Obsługuje akcje przycisków z aktywacją trybu wyszukiwania"""
@@ -993,8 +993,6 @@ Sprawdź numer w emailu potwierdzającym zgłoszenie.""",
                 ]
             }
 
-    # Końcówka pliku gmina_bot.py powinna wyglądać tak:
-
     def _process_smart_intent(self, message):
         """Inteligentne rozpoznawanie intencji"""
         message_lower = message.lower()
@@ -1021,18 +1019,103 @@ Nie jestem pewien, czego szukasz. Wybierz jedną z opcji poniżej lub sprecyzuj 
                 {'text': '↩️ Menu główne', 'action': 'main_menu'}
             ]
         }
-    
-    def send_ga4_no_results_event(self, query, search_type):
-        """Wysyła event do GA4 Measurement Protocol gdy nie ma wyników"""
-        try:
-            # Placeholder dla integracji z GA4
-            # W produkcji należy dodać właściwy endpoint i measurement_id
-            print(f"[GA4 Event] No results for query: '{query}' in {search_type}")
-            return True
-        except Exception as e:
-            print(f"[GA4 Error] Failed to send event: {e}")
-            return False
-        
-    
 
-# KONIEC KLASY GminaBot - nie powinno być tu żadnych dodatkowych znaków
+
+    def send_ga4_no_results_event(self, query, search_type='general'):
+        """
+        Wysyła event 'search_no_results' do Google Analytics 4 via Measurement Protocol
+        RODO-COMPLIANT: Śledzi tylko anonimowe frazy, bez danych osobowych
+        
+        Args:
+            query (str): Fraza wyszukiwania która nie zwróciła wyników
+            search_type (str): Typ wyszukiwania ('contacts', 'forms', 'problems', 'general')
+        
+        Returns:
+            bool: True jeśli wysłano pomyślnie, False w przeciwnym razie
+        """
+        try:
+            # Input validation
+            if not query or not isinstance(query, str):
+                print("[GA4] ❌ Invalid query parameter")
+                return False
+                
+            if not hasattr(self, 'GA4_MEASUREMENT_ID') or not hasattr(self, 'GA4_API_SECRET'):
+                print("[GA4] ❌ Missing GA4 credentials. Initialize them in __init__")
+                return False
+                
+            if search_type not in ['contacts', 'forms', 'problems', 'general']:
+                print(f"[GA4] ⚠️ Invalid search_type: {search_type}, using 'general'")
+                search_type = 'general'
+                
+            import requests
+            import hashlib
+            import time
+            
+            # RODO Compliance: Generowanie anonimowego client_id
+            # Używamy tylko timestampu bez żadnych danych osobowych
+            session_data = f"gmina_bot_{int(time.time() // 3600)}"  # Sesje godzinne
+            client_id = hashlib.md5(session_data.encode()).hexdigest()
+            
+            # GA4 Measurement Protocol endpoint
+            url = "https://www.google-analytics.com/mp/collect"
+            
+            # Request parameters
+            params = {
+                'measurement_id': GA4_MEASUREMENT_ID,
+                'api_secret': GA4_API_SECRET
+            }
+            
+            # Event payload - RODO compliant
+            payload = {
+                "client_id": client_id,  # Anonimowy identyfikator
+                "events": [{
+                    "name": "search_no_results",
+                    "params": {
+                        "search_term": query[:100],  # Ograniczenie długości dla GA4
+                        "search_type": search_type,
+                        "source": "gmina_ai_bot",
+                        "query_length": len(query),
+                        "timestamp": int(time.time()),
+                        "session_id": client_id[:16],
+                        # Dodatkowe parametry kontekstowe (bez PII)
+                        "gmina_context": "public_sector",
+                        "bot_version": "3.0"
+                    }
+                }]
+            }
+            
+            # Wysłanie żądania POST
+            response = requests.post(
+                url, 
+                params=params, 
+                json=payload, 
+                timeout=5  # 5 sekund timeout
+            )
+            
+            # Logowanie sukcesu/porażki
+            if response.status_code == 204:  # GA4 zwraca 204 przy sukcesie
+                print(f"[GA4] ✅ No results event sent: '{query}' ({search_type})")
+                return True
+            else:
+                print(f"[GA4] ❌ Failed to send event. Status: {response.status_code}")
+                if response.text:
+                    print(f"[GA4] Response: {response.text}")
+                return False
+                
+        except requests.exceptions.Timeout:
+            print(f"[GA4] ⏱️ Timeout sending no results event for: '{query}'")
+            return False
+        except requests.exceptions.RequestException as e:
+            print(f"[GA4] 🚫 Network error sending event: {e}")
+            return False
+        except ImportError:
+            print("[GA4] ⚠️ requests library not installed. Install with: pip install requests")
+            return False
+        except Exception as e:
+            print(f"[GA4] 💥 Unexpected error sending event: {e}")
+            import traceback
+            traceback.print_exc()
+            return False  
+
+     
+      

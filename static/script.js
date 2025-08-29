@@ -166,6 +166,37 @@ class GminaBotUI {
             });
 
             const data = await response.json();
+            
+            // GA4 TRACKING: Śledzenie pustych wyników (RODO-compliant)
+            if ((!data.suggestions || data.suggestions.length === 0) && query.length > 2) {
+                console.log('[GA4] No results for query:', query);
+                
+                // Track locally if gtag is available
+                if (typeof gtag === 'function') {
+                    gtag('event', 'search_no_results', {
+                        search_term: query,
+                        search_type: this.searchContext,
+                        source: 'gmina_ai_bot'
+                    });
+                }
+                
+                // Send to backend GA4 Measurement Protocol
+                try {
+                    await fetch('/gmina-bot/track-no-results', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            search_type: this.searchContext || 'general'
+                        })
+                    });
+                } catch (trackingError) {
+                    console.warn('[GA4] Backend tracking failed:', trackingError);
+                }
+            }
+            
             if (data.suggestions && data.suggestions.length > 0) {
                 this.displaySuggestions(data.suggestions);
             } else {
