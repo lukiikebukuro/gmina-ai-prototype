@@ -5,6 +5,7 @@ import re
 from flask import session
 from datetime import datetime
 import random
+from fuzzywuzzy import fuzz
 
 
 class GminaBot:
@@ -217,10 +218,11 @@ Wybierz jedną z opcji lub zacznij pisać, aby skorzystać z inteligentnego wysz
                 {'text': '🔍 Znajdź Kontakt', 'action': 'znajdz_kontakt'},
                 {'text': '📋 Pobierz Formularz', 'action': 'pobierz_formularz'},
                 {'text': '⚠️ Zgłoś Problem', 'action': 'zglos_problem'},
-                {'text': '🏛️ Sprawdź Gminę', 'action': 'sprawdz_gmine'}
-            ],
-            'enable_search': False
+                {'text': '↩️ Menu główne', 'action': 'main_menu'}
+            ]
         }
+    
+        
 
     def handle_button_action(self, action):
         """Obsługuje akcje przycisków z aktywacją trybu wyszukiwania"""
@@ -328,8 +330,30 @@ Przykłady: "dziura na ul. Głównej", "nieodebrane śmieci", "awaria oświetlen
             ]
         }
 
+    def calculate_match_score(self, query, text):
+        """Oblicza wynik dopasowania używając fuzzy matching"""
+        # Konwersja do lowercase dla porównania
+        query_lower = query.lower().strip()
+        text_lower = text.lower()
+        
+        # Różne typy dopasowania z wagami
+        ratio = fuzz.ratio(query_lower, text_lower)  # Podstawowe podobieństwo
+        partial_ratio = fuzz.partial_ratio(query_lower, text_lower)  # Częściowe dopasowanie
+        token_sort = fuzz.token_sort_ratio(query_lower, text_lower)  # Sortowanie tokenów
+        token_set = fuzz.token_set_ratio(query_lower, text_lower)  # Zbiór tokenów
+        
+        # Weighted average z preferencją dla partial_ratio (najlepsze dla wyszukiwania)
+        weighted_score = (
+            ratio * 0.2 +
+            partial_ratio * 0.4 +
+            token_sort * 0.2 +
+            token_set * 0.2
+        )
+        
+        return int(weighted_score)
+
     def search_suggestions(self, query, context):
-        """Generuje sugestie dla wyszukiwania predykcyjnego"""
+        """Generuje sugestie dla wyszukiwania predykcyjnego z fuzzy matching"""
         query = query.lower().strip()
         suggestions = []
         
@@ -339,36 +363,43 @@ Przykłady: "dziura na ul. Głównej", "nieodebrane śmieci", "awaria oświetlen
         if context == 'contacts':
             # Szukanie w osobach
             for person in self.search_database['contacts']['persons']:
-                if (query in person['name'].lower() or 
-                    query in person['position'].lower() or
-                    query in person['department'].lower()):
+                # Łączymy wszystkie pola do przeszukiwania
+                searchable_text = f"{person['name']} {person['position']} {person['department']}"
+                score = self.calculate_match_score(query, searchable_text)
+                
+                if score > 40:  # Próg minimalnego dopasowania
                     suggestions.append({
                         'type': 'person',
                         'icon': '👤',
                         'title': person['name'],
                         'subtitle': f"{person['position']} - {person['department']}",
                         'details': f"📞 {person['phone']} | ✉️ {person['email']}",
-                        'data': person
+                        'data': person,
+                        'score': score
                     })
             
             # Szukanie w wydziałach
             for dept in self.search_database['contacts']['departments']:
-                if query in dept['name'].lower():
+                score = self.calculate_match_score(query, dept['name'])
+                
+                if score > 40:
                     suggestions.append({
                         'type': 'department',
                         'icon': '🏢',
                         'title': dept['name'],
                         'subtitle': dept['hours'],
                         'details': f"📞 {dept['phone']} | ✉️ {dept['email']}",
-                        'data': dept
+                        'data': dept,
+                        'score': score
                     })
         
         elif context == 'forms':
             # Szukanie w formularzach
             for form in self.search_database['forms']:
-                if (query in form['name'].lower() or 
-                    query in form['category'].lower() or
-                    query in form['code'].lower()):
+                searchable_text = f"{form['name']} {form['category']} {form['code']}"
+                score = self.calculate_match_score(query, searchable_text)
+                
+                if score > 40:
                     status_icon = '✅' if form['online'] else '📄'
                     suggestions.append({
                         'type': 'form',
@@ -376,21 +407,28 @@ Przykłady: "dziura na ul. Głównej", "nieodebrane śmieci", "awaria oświetlen
                         'title': form['name'],
                         'subtitle': f"Kod: {form['code']} | Kategoria: {form['category']}",
                         'details': 'Dostępny online' if form['online'] else 'Wymaga wizyty w urzędzie',
-                        'data': form
+                        'data': form,
+                        'score': score
                     })
         
         elif context == 'problems':
             # Szukanie w typowych problemach
             for problem in self.search_database['problems']:
-                if query in problem.lower():
+                score = self.calculate_match_score(query, problem)
+                
+                if score > 40:
                     suggestions.append({
                         'type': 'problem',
                         'icon': '⚠️',
                         'title': problem,
                         'subtitle': 'Kliknij aby zgłosić',
                         'details': 'Zgłoszenie zostanie automatycznie skategoryzowane',
-                        'data': {'problem': problem}
+                        'data': {'problem': problem},
+                        'score': score
                     })
+        
+        # KLUCZOWE: Sortowanie według score malejąco (najlepsze dopasowanie na górze)
+        suggestions.sort(key=lambda x: x['score'], reverse=True)
         
         # Ograniczenie do 8 sugestii
         return suggestions[:8]
@@ -955,6 +993,8 @@ Sprawdź numer w emailu potwierdzającym zgłoszenie.""",
                 ]
             }
 
+    # Końcówka pliku gmina_bot.py powinna wyglądać tak:
+
     def _process_smart_intent(self, message):
         """Inteligentne rozpoznawanie intencji"""
         message_lower = message.lower()
@@ -981,3 +1021,18 @@ Nie jestem pewien, czego szukasz. Wybierz jedną z opcji poniżej lub sprecyzuj 
                 {'text': '↩️ Menu główne', 'action': 'main_menu'}
             ]
         }
+    
+    def send_ga4_no_results_event(self, query, search_type):
+        """Wysyła event do GA4 Measurement Protocol gdy nie ma wyników"""
+        try:
+            # Placeholder dla integracji z GA4
+            # W produkcji należy dodać właściwy endpoint i measurement_id
+            print(f"[GA4 Event] No results for query: '{query}' in {search_type}")
+            return True
+        except Exception as e:
+            print(f"[GA4 Error] Failed to send event: {e}")
+            return False
+        
+    
+
+# KONIEC KLASY GminaBot - nie powinno być tu żadnych dodatkowych znaków

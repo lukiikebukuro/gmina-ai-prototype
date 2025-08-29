@@ -1,4 +1,4 @@
-// script.js - GMINA-AI ENTERPRISE v3.0 with Predictive Search
+// script.js - GMINA-AI ENTERPRISE v3.0 with Fixed Predictive Search
 class GminaBotUI {
     constructor() {
         this.currentGmina = null;
@@ -121,7 +121,6 @@ class GminaBotUI {
                     }
                 }
             } else if (this.searchMode && e.key === 'Enter') {
-                // Obsługa Enter gdy nie ma sugestii ale jesteśmy w trybie wyszukiwania
                 e.preventDefault();
                 if (this.searchContext === 'problems' && e.target.value.length > 20) {
                     this.sendCustomProblem(e.target.value);
@@ -138,30 +137,6 @@ class GminaBotUI {
                 this.closeSuggestions();
             }
         });
-
-        // Aktualizuj pozycję sugestii przy przewijaniu
-        window.addEventListener('scroll', () => {
-            if (document.getElementById('suggestions-container')) {
-                this.updateSuggestionsPosition();
-            }
-        });
-
-        // Aktualizuj pozycję przy zmianie rozmiaru okna
-        window.addEventListener('resize', () => {
-            if (document.getElementById('suggestions-container')) {
-                this.updateSuggestionsPosition();
-            }
-        });
-    }
-
-    updateSuggestionsPosition() {
-        const container = document.getElementById('suggestions-container');
-        if (container && this.userInput) {
-            const inputRect = this.userInput.getBoundingClientRect();
-            container.style.top = `${inputRect.bottom + 5}px`;
-            container.style.left = `${inputRect.left}px`;
-            container.style.width = `${inputRect.width}px`;
-        }
     }
 
     handleSearchInput(query) {
@@ -214,6 +189,7 @@ class GminaBotUI {
         suggestionsContainer.className = 'suggestions-container';
         suggestionsContainer.id = 'suggestions-container';
 
+        // Header z licznikiem wyników
         const header = document.createElement('div');
         header.className = 'suggestions-header';
         header.innerHTML = `<span>🔍 Znaleziono ${suggestions.length} wyników</span>`;
@@ -224,10 +200,17 @@ class GminaBotUI {
             suggestionElement.className = 'suggestion-item';
             suggestionElement.dataset.index = index;
 
+            // Formatowanie procentu dopasowania z kolorami
+            const scoreClass = suggestion.score >= 80 ? 'score-high' : 
+                              suggestion.score >= 60 ? 'score-medium' : 'score-low';
+            
             suggestionElement.innerHTML = `
                 <div class="suggestion-icon">${suggestion.icon}</div>
                 <div class="suggestion-content">
-                    <div class="suggestion-title">${suggestion.title}</div>
+                    <div class="suggestion-title">
+                        ${suggestion.title}
+                        <span class="suggestion-score ${scoreClass}">${suggestion.score}%</span>
+                    </div>
                     <div class="suggestion-subtitle">${suggestion.subtitle}</div>
                     ${suggestion.details ? `<div class="suggestion-details">${suggestion.details}</div>` : ''}
                 </div>
@@ -245,15 +228,8 @@ class GminaBotUI {
             suggestionsContainer.appendChild(suggestionElement);
         });
 
-        // Pozycjonowanie względem pola input
-        const inputRect = this.userInput.getBoundingClientRect();
-        suggestionsContainer.style.position = 'fixed';
-        suggestionsContainer.style.top = `${inputRect.bottom + 5}px`;
-        suggestionsContainer.style.left = `${inputRect.left}px`;
-        suggestionsContainer.style.width = `${inputRect.width}px`;
-
-        // Dodaj do body zamiast do kontenera
-        document.body.appendChild(suggestionsContainer);
+        // Dodaj kontener sugestii do text-input-container zamiast do body
+        this.textInputContainer.appendChild(suggestionsContainer);
     }
 
     showCustomInputHint() {
@@ -271,15 +247,8 @@ class GminaBotUI {
             </div>
         `;
 
-        // Pozycjonowanie względem pola input
-        const inputRect = this.userInput.getBoundingClientRect();
-        suggestionsContainer.style.position = 'fixed';
-        suggestionsContainer.style.top = `${inputRect.bottom + 5}px`;
-        suggestionsContainer.style.left = `${inputRect.left}px`;
-        suggestionsContainer.style.width = `${inputRect.width}px`;
-
-        // Dodaj do body zamiast do kontenera
-        document.body.appendChild(suggestionsContainer);
+        // Dodaj do text-input-container
+        this.textInputContainer.appendChild(suggestionsContainer);
     }
 
     navigateSuggestions(direction) {
@@ -301,6 +270,8 @@ class GminaBotUI {
         items.forEach((item, index) => {
             if (index === this.selectedSuggestionIndex) {
                 item.classList.add('selected');
+                // Scroll into view if needed
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             } else {
                 item.classList.remove('selected');
             }
@@ -623,9 +594,6 @@ class GminaBotUI {
             this.inputContext = null;
         }
 
-        // NIE wyłączamy trybu wyszukiwania automatycznie
-        // Pozwalamy backendowi zdecydować co dalej
-
         this.displayTypingIndicator();
         this.showLoading(true);
 
@@ -811,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('=' .repeat(60));
     console.log('🏛️  GMINA-AI ENTERPRISE v3.0 - Frontend');
     console.log('🤖 Powered by Adept AI Engine');
-    console.log('🔍 Predictive Search: ENABLED');
+    console.log('🔍 Predictive Search: FIXED & ENHANCED');
     console.log('=' .repeat(60));
 
     window.gminaBotUI = new GminaBotUI();

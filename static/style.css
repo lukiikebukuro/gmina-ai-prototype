@@ -1406,3 +1406,255 @@ textarea:focus {
         line-height: 1.4;
     }
 }
+
+
+/* DODAJ TE STYLE DO ISTNIEJĄCEGO PLIKU style.css */
+
+/* Fixed Predictive Search Styles */
+.text-input-container {
+    position: relative;
+    margin-top: 1rem;
+}
+
+/* Suggestions Container - NAPRAWIONE POZYCJONOWANIE */
+.suggestions-container {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 10px;
+    background: var(--white);
+    border: 2px solid var(--primary-blue);
+    border-radius: var(--border-radius);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Suggestions Header */
+.suggestions-header {
+    padding: 0.75rem 1rem;
+    background: var(--primary-blue);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Suggestion Items */
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--gray-100);
+    transition: all 0.2s ease;
+    position: relative;
+    background: var(--white);
+}
+
+.suggestion-item:hover {
+    background: var(--gray-50);
+}
+
+.suggestion-item.selected {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+/* Suggestion Icon */
+.suggestion-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+/* Suggestion Content */
+.suggestion-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.suggestion-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Score Badge - NOWY ELEMENT */
+.suggestion-score {
+    font-size: 0.875rem;
+    font-weight: 700;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Kolory dla różnych poziomów dopasowania */
+.suggestion-score.score-high {
+    background: var(--success-green);
+    color: var(--white);
+}
+
+.suggestion-score.score-medium {
+    background: var(--warning-amber);
+    color: var(--white);
+}
+
+.suggestion-score.score-low {
+    background: var(--gray-400);
+    color: var(--white);
+}
+
+/* Gdy element jest zaznaczony */
+.suggestion-item.selected .suggestion-score {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-blue);
+}
+
+.suggestion-subtitle {
+    font-size: 0.85rem;
+    color: var(--gray-600);
+    margin-bottom: 0.25rem;
+}
+
+.suggestion-item.selected .suggestion-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.suggestion-details {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin-top: 0.25rem;
+}
+
+.suggestion-item.selected .suggestion-details {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Custom Input Hint */
+.custom-input-hint {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--gray-600);
+}
+
+.hint-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.hint-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.hint-text small {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--gray-500);
+    font-size: 0.8rem;
+}
+
+/* Search Mode Indicator */
+.text-input-container.search-mode .input-group input {
+    border-color: var(--secondary-blue);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.text-input-container.search-mode .input-group input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Scrollbar styling dla sugestii */
+.suggestions-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.suggestions-container::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+.suggestions-container::-webkit-scrollbar-thumb {
+    background: var(--gray-400);
+    border-radius: 4px;
+}
+
+.suggestions-container::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
+}
+
+/* Mobile responsiveness dla sugestii */
+@media (max-width: 768px) {
+    .suggestions-container {
+        max-height: 300px;
+        margin-bottom: 5px;
+    }
+    
+    .suggestion-item {
+        padding: 0.875rem 1rem;
+    }
+    
+    .suggestion-icon {
+        font-size: 1.25rem;
+    }
+    
+    .suggestion-title {
+        font-size: 0.9rem;
+    }
+    
+    .suggestion-score {
+        font-size: 0.8rem;
+        padding: 0.1rem 0.4rem;
+    }
+    
+    .suggestion-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    .suggestion-details {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .suggestions-container {
+        max-height: 250px;
+    }
+    
+    .suggestion-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .suggestions-header {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
